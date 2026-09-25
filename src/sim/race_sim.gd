@@ -48,7 +48,7 @@ var _first := true
 
 
 ## opts: {track, mode, laps, difficulty, player:{kart_id, character_id, paint_id}, ai_count, seed,
-##        auto_instant, all_ai, skip_intro}
+##        auto_instant, all_ai, skip_intro, ai_roster:[{character_id, kart_id, paint_id}]}
 func _init(p_opts: Dictionary) -> void:
 	opts = p_opts
 	track = opts["track"]
@@ -79,10 +79,17 @@ func _init(p_opts: Dictionary) -> void:
 		if pt["id"] != pp["id"]:
 			paints.append(pt)
 	var all: Array[KartSim] = [player]
+	# 可选：固定的 AI 阵容（大奖赛各场保持一致）[{character_id, kart_id, paint_id}, ...]
+	var roster: Array = opts.get("ai_roster", [])
 	for i in ai_count:
 		var kd: Dictionary = KartsData.KARTS[(i + 1) % KartsData.KARTS.size()]
 		var ch: Dictionary = chars[i % chars.size()]
 		var pt: Dictionary = paints[i % paints.size()]
+		if i < roster.size():
+			var r: Dictionary = roster[i]
+			kd = KartsData.kart_by_id(r.get("kart_id", kd["id"]))
+			ch = KartsData.character_by_id(r.get("character_id", ch["id"]))
+			pt = KartsData.paint_by_id(r.get("paint_id", pt["id"]))
 		var k := KartSim.new(i + 1, ch["name"], false, kd, ch, pt)
 		k.ai = AIDriver.new(k, diff, seed * 31 + i * 977)
 		all.append(k)
@@ -423,6 +430,15 @@ func results() -> Array[Dictionary]:
 
 
 ## 断开 KartSim ↔ AIDriver、道具实体 ↔ KartSim 之间的循环引用，比赛结束后调用
+## 当前 AI 阵容（用于大奖赛后续场次保持一致）
+func ai_roster() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for k in karts:
+		if not k.is_player:
+			out.append({"character_id": k.character["id"], "kart_id": k.kart_def["id"], "paint_id": k.paint["id"]})
+	return out
+
+
 func dispose() -> void:
 	for k in karts:
 		k.ai = null

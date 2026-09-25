@@ -38,7 +38,7 @@ var autopilot := false
 
 
 ## sel: {mode, track_id, character_id, kart_id, paint_id, difficulty, laps}
-## opts: {quality, autopilot, skip_intro, seed}
+## opts: {quality, autopilot, skip_intro, seed, ai_roster}
 func start(p_sel: Dictionary, opts := {}) -> void:
 	sel = p_sel.duplicate()
 	quality = opts.get("quality", Store.settings.get("quality", "high"))
@@ -58,6 +58,7 @@ func start(p_sel: Dictionary, opts := {}) -> void:
 		"seed": int(opts.get("seed", Time.get_ticks_usec() % 100000 + 1)),
 		"auto_instant": Store.settings.get("auto_instant", false),
 		"all_ai": autopilot, "skip_intro": opts.get("skip_intro", false),
+		"ai_roster": opts.get("ai_roster", []),
 	})
 
 	effects = Effects.new()
@@ -278,7 +279,9 @@ func build_summary() -> Dictionary:
 		"track_id": track.id, "track_name": track.name, "mode": race.mode, "laps": race.laps,
 		"rank": p.rank, "total": p.finish_time, "best_lap": p.best_lap, "rows": rows,
 		"record": record_result, "ghost_total": ghost_data.get("total", -1.0),
-		"solo": race.karts.size() == 1,
+		"solo": race.karts.size() == 1, "ai_roster": race.ai_roster(),
+		# 精彩回放数据（Task 12 填充；为空时结算页不显示回放按钮）
+		"replay": {},
 	}
 
 
