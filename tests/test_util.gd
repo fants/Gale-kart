@@ -6,6 +6,12 @@ var failures := 0
 var passes := 0
 var suite := ""
 var verbose := false
+## 套件跑到最后要调用 done()；没调用说明中途出错退出
+var suite_done := false
+
+
+func done() -> void:
+	suite_done = true
 
 
 func check(cond: bool, msg: String) -> void:

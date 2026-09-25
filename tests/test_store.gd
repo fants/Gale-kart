@@ -46,3 +46,4 @@ func run(t: TestUtil) -> void:
 	t.check(store.submit_gp("star", 1, 44), "拿到冠军算刷新")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP))
 	store.free()
+	t.done()

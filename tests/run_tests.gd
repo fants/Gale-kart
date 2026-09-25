@@ -25,12 +25,17 @@ func _run() -> void:
 	files.sort()
 	var t0 := Time.get_ticks_msec()
 	for f in files:
-		var script: GDScript = load("res://tests/" + f)
-		var suite: Object = script.new()
 		t.suite = f.trim_suffix(".gd")
 		var before := t.failures
 		var s0 := Time.get_ticks_msec()
+		var script: GDScript = load("res://tests/" + f)
+		if script == null or not script.can_instantiate():
+			t.check(false, "脚本无法加载或编译失败")
+			continue
+		var suite: Object = script.new()
+		t.suite_done = false
 		await suite.run(t)
+		t.check(t.suite_done, "套件完整跑完（没有中途报错退出）")
 		print("[%s] %s  (%d ms)" % ["OK" if t.failures == before else "FAILED", t.suite, Time.get_ticks_msec() - s0])
 	print("\n%d passed, %d failures (%.1f s)" % [t.passes, t.failures, (Time.get_ticks_msec() - t0) / 1000.0])
 	quit(t.failures)
