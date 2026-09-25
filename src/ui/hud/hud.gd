@@ -50,6 +50,10 @@ var _all_visible := true
 var _last_nitros := 0
 var _last_items := 0
 var _rank_hold := 0.0
+## 等待确认的超越名次（保持 0.4 s 才提示）
+var _pending_rank := 0
+## 已经提示过的最好名次，避免来回超越时重复提示
+var _best_announced := 99
 
 
 func setup(p_race: RaceSim) -> void:
@@ -338,9 +342,10 @@ func update_view(dt: float, p_race: RaceSim) -> void:
 	var n := race.karts.size()
 	# 名次（变化时弹跳）
 	if p.rank != _last_rank:
-		# 比赛进行 3 s 后名次提升：提示超越（名次需保持 0.4 s，避免并排时来回闪）
+		# 比赛进行 3 s 后名次提升：记下来，保持 0.4 s 后再提示（避免并排时来回闪）
 		if _last_rank != 0 and p.rank < _last_rank and race.phase == "racing" and race.time > 3.0 and not p.finished:
-			sub("超越！第 %d 名" % p.rank, MINT)
+			_pending_rank = p.rank
+			_rank_hold = 0.4
 		if _last_rank != 0:
 			var tw := create_tween()
 			_rank_label.pivot_offset = _rank_label.size * 0.5
@@ -349,6 +354,15 @@ func update_view(dt: float, p_race: RaceSim) -> void:
 		_last_rank = p.rank
 		_rank_label.text = str(p.rank)
 		_rank_label.add_theme_color_override("font_color", YELLOW if p.rank == 1 else (WHITE if p.rank <= 3 else Color("#C9D2F0")))
+	if _pending_rank > 0:
+		_rank_hold -= dt
+		if p.rank > _pending_rank:
+			_pending_rank = 0
+		elif _rank_hold <= 0.0:
+			if _pending_rank < _best_announced or _pending_rank <= 3:
+				sub("超越！第 %d 名" % _pending_rank, MINT)
+			_best_announced = mini(_best_announced, _pending_rank)
+			_pending_rank = 0
 	_rank_total.text = "/%d" % n
 	var lap := clampi(maxi(p.lap, 1), 1, race.laps)
 	_lap_label.text = "LAP %d/%d" % [lap, race.laps]
