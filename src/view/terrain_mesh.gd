@@ -56,7 +56,8 @@ func build(track: TrackData, terrain: TerrainData, cell: float) -> void:
 			var nn := noise.get_noise_2d(x, z) * 0.5 + 0.5
 			var col := c_base.lerp(c_alt, nn)
 			var high := clampf((y - 18.0) / 40.0, 0.0, 1.0)
-			colors[idx] = col.lerp(c_far, high * 0.8)
+			# 顶点色在着色器里按线性色使用，这里先把 sRGB 主题色转成线性
+			colors[idx] = col.lerp(c_far, high * 0.8).srgb_to_linear()
 
 	var indices := PackedInt32Array()
 	indices.resize(nxs * nzs * 6)
