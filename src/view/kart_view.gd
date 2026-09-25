@@ -154,7 +154,7 @@ func update_view(dt: float, time: float, alpha: float, cam_pos: Vector3) -> void
 			var nitro := k.boost_kind == "nitro" or k.boost_kind == "start"
 			var s := (1.3 if nitro else 0.85) * randf_range(0.85, 1.15)
 			f.scale = Vector3(s, s * randf_range(1.0, 1.5), s)
-			f.position = model.exhaust_local(i) - model.body.position + Vector3(0, 0, -0.35 * s)
+			f.position = model.exhaust_body(i) + Vector3(0, 0, -0.35 * s)
 			f.rotation = Vector3(-PI / 2, 0, 0)
 	_flame_mat.albedo_color = Color(0.45, 0.8, 1.0, 0.9) if k.boost_kind in ["nitro", "start", "instant"] else Color(1.0, 0.6, 0.2, 0.9)
 

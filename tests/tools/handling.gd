@@ -46,5 +46,12 @@ func _initialize() -> void:
 		for i in 240:
 			k.step(ctx)
 		var gain := k.gauge + k.nitros - g0
-		print("%-4s 0→100 %.2f s  极速 %.1f m/s（显示 %d km/h）  满舵半径 %.1f m  漂移 2 s 集气 %.2f" % [kd["name"], t100, vmax, int(vmax * KMH), r_turn, gain])
+		# 漂移中满舵 / 反打时的转弯半径（按行驶轨迹曲率算）
+		var r_drift := k.speed / maxf(absf(k.yaw_rate), 1e-4)
+		var v_drift := k.speed
+		k.input.steer = -0.3
+		for i in 120:
+			k.step(ctx)
+		var r_open := k.speed / maxf(absf(k.yaw_rate), 1e-4)
+		print("%-4s 0→100 %.2f s  极速 %.1f m/s（显示 %d km/h）  满舵半径 %.1f m  漂移 2 s 集气 %.2f  漂移满舵半径 %.1f m（%.1f m/s）  漂移反打半径 %.1f m" % [kd["name"], t100, vmax, int(vmax * KMH), r_turn, gain, r_drift, v_drift, r_open])
 	quit()

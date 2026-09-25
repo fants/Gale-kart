@@ -167,8 +167,12 @@ func rear_local(side: int) -> Vector3:
 
 
 func exhaust_local(i: int) -> Vector3:
-	var p := _exhausts[clampi(i, 0, _exhausts.size() - 1)] * kart_root.scale.x
-	return body.transform * p
+	return body.transform * exhaust_body(i)
+
+
+## 排气口在车身节点（body）坐标系下的位置
+func exhaust_body(i: int) -> Vector3:
+	return _exhausts[clampi(i, 0, _exhausts.size() - 1)] * kart_root.scale.x
 
 
 ## 幽灵车：半透明青色
