@@ -10,6 +10,8 @@ var flat := false
 var _rolling := FastNoiseLite.new()
 var _mount := FastNoiseLite.new()
 var _flat_far := FastNoiseLite.new()
+## 距赛道 64 m 以内可能出现的 16 m 网格（膨胀后的赛道占用格），不在其中的点跳过最近点查询
+var _near_cells := {}
 
 
 static func create(t: TrackData, seed := 11) -> TerrainData:
@@ -31,6 +33,13 @@ static func create(t: TrackData, seed := 11) -> TerrainData:
 	td._mount.fractal_octaves = 4
 	td._flat_far.seed = seed + t.n + 31
 	td._flat_far.fractal_octaves = 3
+	var r := ceili(64.0 / TrackData.GRID_CELL) + 1
+	for i in t.n:
+		var cx := floori(t.px[i] / TrackData.GRID_CELL)
+		var cz := floori(t.pz[i] / TrackData.GRID_CELL)
+		for gx in range(cx - r, cx + r + 1):
+			for gz in range(cz - r, cz + r + 1):
+				td._near_cells[Vector2i(gx, gz)] = true
 	return td
 
 
@@ -53,8 +62,10 @@ func height_at(x: float, z: float) -> float:
 	if flat:
 		var far := MathX.smooth(80.0, 340.0, _outside(x, z))
 		return -0.3 + far * (4.0 + _flat_far.get_noise_2d(x / 70.0, z / 70.0) * 6.0)
-	var near := track.nearest(x, z, 64.0)
 	var h := _base(x, z)
+	var near := {}
+	if _near_cells.has(Vector2i(floori(x / TrackData.GRID_CELL), floori(z / TrackData.GRID_CELL))):
+		near = track.nearest(x, z, 64.0)
 	if not near.is_empty():
 		var w := MathX.smooth(track.wall_offset + 1.5, track.wall_offset + 52.0, near["d"])
 		h = lerpf(float(near["y"]) - 0.45, h, w)
