@@ -47,6 +47,9 @@ var _last_rank := 0
 var _roll_t := 0.0
 var ghost_diff := INF
 var _all_visible := true
+var _last_nitros := 0
+var _last_items := 0
+var _rank_hold := 0.0
 
 
 func setup(p_race: RaceSim) -> void:
@@ -335,6 +338,9 @@ func update_view(dt: float, p_race: RaceSim) -> void:
 	var n := race.karts.size()
 	# 名次（变化时弹跳）
 	if p.rank != _last_rank:
+		# 比赛进行 3 s 后名次提升：提示超越（名次需保持 0.4 s，避免并排时来回闪）
+		if _last_rank != 0 and p.rank < _last_rank and race.phase == "racing" and race.time > 3.0 and not p.finished:
+			sub("超越！第 %d 名" % p.rank, MINT)
 		if _last_rank != 0:
 			var tw := create_tween()
 			_rank_label.pivot_offset = _rank_label.size * 0.5
@@ -408,7 +414,24 @@ func update_view(dt: float, p_race: RaceSim) -> void:
 		_flash.color.a = maxf(0.0, _flash.color.a - dt * 2.5)
 
 
+func _pop_slot(i: int) -> void:
+	var slot := _slots[i]
+	slot.pivot_offset = slot.size * 0.5
+	var tw := create_tween()
+	tw.tween_property(slot, "scale", Vector2(1.35, 1.35), 0.08).set_trans(Tween.TRANS_BACK)
+	tw.tween_property(slot, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	slot.modulate = Color(2.2, 2.2, 2.2)
+	create_tween().tween_property(slot, "modulate", Color.WHITE, 0.4)
+
+
 func _update_slots(dt: float, p: KartSim) -> void:
+	if p.nitros > _last_nitros and not race.item_mode:
+		_pop_slot(clampi(p.nitros - 1, 0, 1))
+	_last_nitros = p.nitros
+	if race.item_mode and p.items.size() != _last_items:
+		if p.items.size() > _last_items:
+			_pop_slot(clampi(p.items.size() - 1, 0, 1))
+		_last_items = p.items.size()
 	if race.item_mode:
 		_roll_t += dt
 		for i in 2:
