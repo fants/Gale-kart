@@ -22,8 +22,11 @@ var water_flies: Array[Dictionary] = []
 var _next_id := 1
 
 
+## p_race 为 null 时是回放用的「木偶」实例：只承载实体数组，不做仿真
 func _init(p_race: RaceSim) -> void:
 	race = p_race
+	if race == null:
+		return
 	track = race.track
 	if race.item_mode:
 		for b in track.item_boxes:

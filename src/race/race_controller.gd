@@ -24,6 +24,7 @@ var camera: Camera3D
 var rig: CameraRig
 var player_input: PlayerInput
 var router: EventRouter
+var recorder: ReplayRecorder
 var ghost_view: Node3D = null
 var ghost_data: Dictionary = {}
 ## 幽灵车每帧的赛道进度（已展开圈数，单位采样），用于实时差距
@@ -65,6 +66,9 @@ func start(p_sel: Dictionary, opts := {}) -> void:
 		"all_ai": autopilot, "skip_intro": opts.get("skip_intro", false),
 		"ai_roster": opts.get("ai_roster", []),
 	})
+
+	recorder = ReplayRecorder.new(race)
+	race.recorder = recorder
 
 	effects = Effects.new()
 	add_child(effects)
@@ -119,6 +123,10 @@ func focus_kart() -> KartSim:
 	return race.player
 
 
+func all_karts() -> Array[KartSim]:
+	return race.karts
+
+
 func vibrate(weak: float, strong: float, dur: float) -> void:
 	if player_input and not autopilot:
 		player_input.vibrate(weak, strong, dur)
@@ -163,6 +171,8 @@ func _process(dt: float) -> void:
 		inp.use_pressed = false
 
 	race.update(dt, inp)
+	if not results_sent:
+		recorder.capture_events(race.events, race.clock)
 	router.handle(race.events)
 	_update_views(dt)
 
@@ -181,8 +191,10 @@ func _process(dt: float) -> void:
 	if finish_t >= 0.0:
 		finish_t += dt
 		if finish_t > RESULTS_DELAY and not results_sent:
+			var summary := build_summary()
 			results_sent = true
-			race_finished.emit(build_summary())
+			race.recorder = null
+			race_finished.emit(summary)
 
 
 func _update_views(dt: float) -> void:
@@ -190,49 +202,9 @@ func _update_views(dt: float) -> void:
 	for v in kart_views:
 		v.update_view(dt, time, race.alpha, cam_pos)
 	item_view.update_view(dt, time, race.items, effects)
-	_emit_continuous(dt)
+	ContinuousFx.emit(effects, kart_views, cam_pos, track.grip < 1.0, dt)
 	world.update_view(dt, time, camera)
 	_update_ghost()
-
-
-## 持续特效：漂移烟与胎痕、漂移火花、尾焰、越野尘土、尾流风线
-func _emit_continuous(dt: float) -> void:
-	var cam := camera.global_position
-	for kv in kart_views:
-		var k := kv.kart
-		var kp := Vector3(k.x, k.y, k.z)
-		var near := kp.distance_squared_to(cam) < 130.0 * 130.0
-		var drifting := (k.drifting or k.fake_drift != 0.0) and k.on_ground and k.speed > 8.0
-		var id := k.index * 2
-		var fwd := Vector3(sin(k.heading), 0.0, cos(k.heading))
-		if near and drifting:
-			var rate := 34.0 if k.drifting else 18.0
-			for side: int in [-1, 1]:
-				var rp := kv.rear_world(side)
-				for i in effects.rate_count("s%d%d" % [id, side], rate, dt):
-					effects.smoke(rp, Vector3(k.vx, 0.0, k.vz), 1.2 if track.grip < 1.0 else 1.0)
-				effects.skids.add(id + (1 if side > 0 else 0), rp + Vector3(0, 0.04, 0), fwd, 0.34, true)
-			# 漂移火花：白色，满 0.35 s 后变蓝（可以小喷）
-			if k.drifting:
-				var sp := kv.rear_world(int(k.drift_dir))
-				var tier := 1 if k.drift_time > KartSim.INSTANT_MIN_DRIFT else 0
-				for i in effects.rate_count("ds%d" % id, 30.0, dt):
-					effects.drift_spark(sp + Vector3(0, 0.1, 0), tier)
-		else:
-			effects.skids.add(id, Vector3.ZERO, Vector3.ZERO, 0.0, false)
-			effects.skids.add(id + 1, Vector3.ZERO, Vector3.ZERO, 0.0, false)
-		if near and k.is_boosting():
-			for e in 2:
-				var ep := kv.exhaust_world(e)
-				for i in effects.rate_count("f%d%d" % [id, e], 40.0, dt):
-					effects.flame(ep, -fwd, k.boost_kind)
-		if near and k.offroad and k.on_ground and k.speed > 6.0:
-			var rp2 := kv.rear_world(1)
-			for i in effects.rate_count("d%d" % id, 16.0, dt):
-				effects.dust(rp2, Vector3(k.vx, 0.0, k.vz))
-		if near and k.in_draft and k.speed > 15.0:
-			for i in effects.rate_count("w%d" % id, 14.0, dt):
-				effects.wind(kp + Vector3(0, 0.8, 0) + fwd * 1.5, fwd)
 
 
 func _update_engine_audio() -> void:
@@ -287,8 +259,8 @@ func build_summary() -> Dictionary:
 		"rank": p.rank, "total": p.finish_time, "best_lap": p.best_lap, "rows": rows,
 		"record": record_result, "ghost_total": ghost_data.get("total", -1.0),
 		"solo": race.karts.size() == 1, "ai_roster": race.ai_roster(),
-		# 精彩回放数据（Task 12 填充；为空时结算页不显示回放按钮）
-		"replay": {},
+		# 精彩回放数据（为空时结算页不显示回放按钮）
+		"replay": recorder.to_data() if recorder and recorder.frames.size() > 60 else {},
 	}
 
 

@@ -2,17 +2,20 @@ class_name EventRouter
 extends RefCounted
 ## 仿真事件 → HUD 文字、音效（2D / 3D）、特效、相机震动、手柄震动。映射同参考版 main.js 的 handleEvents。
 
-var ctl: RaceController
+## RaceController 或 ReplayPlayer（鸭子类型：需要 focus_kart() all_karts() vibrate() on_player_finish()
+## 与 effects hud rig camera 成员）
+var ctl
 ## 回放模式：只触发特效和音效，不改 HUD、不震动手柄
 var replay := false
 
 
-func _init(p_ctl: RaceController) -> void:
+func _init(p_ctl: Node) -> void:
 	ctl = p_ctl
 
 
 func _sfx_at(name: String, pos: Vector3, opts := {}) -> void:
-	AudioMgr.play_at(name, pos, ctl.camera.global_transform, opts)
+	var cam: Camera3D = ctl.camera
+	AudioMgr.play_at(name, pos, cam.global_transform, opts)
 
 
 func _kpos(k: KartSim) -> Vector3:
@@ -20,9 +23,9 @@ func _kpos(k: KartSim) -> Vector3:
 
 
 func handle(events: Array[Dictionary]) -> void:
-	var p := ctl.focus_kart()
-	var fx := ctl.effects
-	var hud := ctl.hud
+	var p: KartSim = ctl.focus_kart()
+	var fx: Effects = ctl.effects
+	var hud: Hud = ctl.hud
 	for e in events:
 		var k: KartSim = e.get("kart")
 		var me := k != null and k == p
@@ -197,7 +200,7 @@ func handle(events: Array[Dictionary]) -> void:
 				if not replay:
 					hud.flash()
 				AudioMgr.play("thunder")
-				for o in ctl.race.karts:
+				for o: KartSim in ctl.all_karts():
 					if o.dizzy > 1.9:
 						fx.burst("thunder", _kpos(o))
 				if not me and p.dizzy > 0.0:
@@ -217,7 +220,7 @@ func handle(events: Array[Dictionary]) -> void:
 						hud.sub("第 %d 圈  %s" % [e["lap"], MathX.format_time(e["time"])])
 						AudioMgr.play("lap")
 			"finish":
-				if me:
+				if me and not replay:
 					ctl.on_player_finish(e)
 			"respawn":
 				fx.burst("respawn", _kpos(k))

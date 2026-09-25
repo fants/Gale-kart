@@ -90,12 +90,21 @@ func start_gp(_cup_id: String, sel: Dictionary) -> void:
 	start_race(sel)
 
 
-func start_replay(_replay: Dictionary) -> void:
-	pass
+func start_replay(replay: Dictionary) -> void:
+	if replay.is_empty():
+		return
+	_clear_current()
+	var rp := ReplayPlayer.new()
+	main.add_child(rp)
+	rp.start(replay, Store.settings.get("quality", "high"))
+	rp.exit_requested.connect(func() -> void: goto_menu("main"))
+	current = rp
 
 
 func _on_race_finished(summary: Dictionary) -> void:
 	print("比赛结束：第 %d 名，总用时 %s" % [summary["rank"], MathX.format_time(summary["total"])])
+	if args.has("then-replay"):
+		start_replay(summary["replay"])
 
 
 func _on_race_request(action: String) -> void:
@@ -105,7 +114,7 @@ func _on_race_request(action: String) -> void:
 
 
 func _process(dt: float) -> void:
-	if race_ctl == null or not is_instance_valid(race_ctl):
+	if current == null or not is_instance_valid(current):
 		return
 	_shot_t += dt
 	if not _shots.is_empty() and _shot_t >= _shots[0]:
@@ -122,9 +131,9 @@ func _save_shot(file: String) -> void:
 	img.save_png(dir.path_join(file))
 	var fps := Engine.get_frames_per_second()
 	print("截图 %s（FPS %d）" % [dir.path_join(file), fps])
-	if race_ctl and args.has("debug-cam"):
+	if race_ctl and is_instance_valid(race_ctl) and args.has("debug-cam"):
 		var p := race_ctl.race.player
 		var cp := race_ctl.camera.global_position
 		print("  玩家 %s %s pos=(%.1f,%.1f,%.1f) heading=%.2f 速度=%.1f  相机=(%.1f,%.1f,%.1f) 距离=%.1f" % [p.kart_def["id"], p.character["id"], p.x, p.y, p.z, p.heading, p.speed, cp.x, cp.y, cp.z, cp.distance_to(Vector3(p.x, p.y, p.z))])
-	if race_ctl and race_ctl.world:
+	if race_ctl and is_instance_valid(race_ctl) and race_ctl.world:
 		print("  构建耗时 ", race_ctl.world.build_log)
