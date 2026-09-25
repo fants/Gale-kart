@@ -52,7 +52,7 @@ func boot(main_node: Node) -> void:
 				_shots.append(float(t))
 		_quit_after = float(args.get("quit-after", "-1"))
 		start_race(sel, {"autopilot": args.has("autopilot"), "quality": args.get("quality", Store.settings.get("quality", "high")),
-			"skip_intro": args.has("skip-intro"), "seed": 7})
+			"skip_intro": args.has("skip-intro"), "seed": 7, "record": args.has("record")})
 		return
 	goto_title()
 

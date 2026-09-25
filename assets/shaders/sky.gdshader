@@ -28,10 +28,14 @@ void sky() {
 		col += sun_color * pow(sdot, 220.0) * 1.2;
 		col += sun_color * smoothstep(1.0 - sun_size * 0.1, 1.0 - sun_size * 0.08, sdot) * 6.0;
 	} else {
-		// 星空与月亮
-		vec2 sp = d.xz / max(d.y + 0.15, 0.05) * 60.0;
-		float star = step(0.9965, hash12(floor(sp))) * smoothstep(0.0, 0.3, h);
-		col += vec3(star) * (0.6 + 0.4 * sin(TIME * 3.0 + hash12(floor(sp)) * 40.0));
+		// 星空：每个格子里一颗随机位置、很小的星星，闪烁
+		vec2 sp = d.xz / max(d.y + 0.35, 0.05) * 90.0;
+		vec2 cell = floor(sp);
+		float rnd = hash12(cell);
+		vec2 spos = vec2(hash12(cell + 7.1), hash12(cell + 3.7)) * 0.8 + 0.1;
+		float dist = length(fract(sp) - spos);
+		float star = step(0.93, rnd) * smoothstep(0.09, 0.0, dist) * smoothstep(0.02, 0.35, h);
+		col += vec3(0.9, 0.92, 1.0) * star * (0.55 + 0.45 * sin(TIME * 2.5 + rnd * 60.0)) * 1.6;
 		col += sun_color * smoothstep(0.9993, 0.9996, sdot) * 2.0;
 		col += sun_color * pow(sdot, 60.0) * 0.25;
 	}

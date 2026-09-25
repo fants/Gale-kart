@@ -26,6 +26,8 @@ var player_input: PlayerInput
 var router: EventRouter
 var ghost_view: Node3D = null
 var ghost_data: Dictionary = {}
+## 幽灵车每帧的赛道进度（已展开圈数，单位采样），用于实时差距
+var ghost_prog := PackedFloat32Array()
 
 var time := 0.0
 var paused := false
@@ -35,14 +37,17 @@ var hud_visible := true
 var record_result := {}
 ## 无人值守模式（截图 / 演示）：玩家也由 AI 驾驶
 var autopilot := false
+## 无人值守时也提交成绩（调试：生成计时赛幽灵车）
+var record_even_autopilot := false
 
 
 ## sel: {mode, track_id, character_id, kart_id, paint_id, difficulty, laps}
-## opts: {quality, autopilot, skip_intro, seed, ai_roster}
+## opts: {quality, autopilot, skip_intro, seed, ai_roster, record}
 func start(p_sel: Dictionary, opts := {}) -> void:
 	sel = p_sel.duplicate()
 	quality = opts.get("quality", Store.settings.get("quality", "high"))
 	autopilot = opts.get("autopilot", false)
+	record_even_autopilot = opts.get("record", false)
 	name = "Race"
 	track = TrackData.build(TracksData.track_by_id(sel.get("track_id", "village")))
 	terrain = TerrainData.create(track)
@@ -169,6 +174,8 @@ func _process(dt: float) -> void:
 		rig.chase(race.player, dt, race.alpha)
 	screen_fx.update_view(dt, time, race.player)
 	_update_engine_audio()
+	if not ghost_prog.is_empty():
+		hud.set_ghost_diff(_ghost_diff())
 	hud.update_view(dt, race)
 
 	if finish_t >= 0.0:
@@ -255,7 +262,7 @@ func on_player_finish(e: Dictionary) -> void:
 	AudioMgr.play("finish")
 	effects.burst("confetti", Vector3(p.x, p.y, p.z), {"count": 140})
 	vibrate(0.5, 0.5, 0.5)
-	if autopilot:
+	if autopilot and not record_even_autopilot:
 		return
 	var ghost := {}
 	if race.mode == "time":
@@ -299,6 +306,46 @@ func _setup_ghost() -> void:
 	model.set_ghost(true)
 	ghost_view = model
 	add_child(model)
+	# 预先把每帧投影到赛道，得到单调递增的进度
+	var pr := TrackProj.new()
+	var hint := -1
+	var lap := -1
+	var last_s := -1.0
+	for i in frames.size() / 4:
+		track.project(float(frames[i * 4]), float(frames[i * 4 + 1]), float(frames[i * 4 + 2]), hint, pr)
+		hint = pr.idx
+		if lap < 0:
+			lap = 0 if pr.s > track.n * 0.5 else 1
+		elif pr.s - last_s < -track.n * 0.5:
+			lap += 1
+		elif pr.s - last_s > track.n * 0.5:
+			lap -= 1
+		last_s = pr.s
+		ghost_prog.append((lap - 1) * track.n + pr.s)
+
+
+## 玩家与幽灵车的时间差（秒，负数表示领先）
+func _ghost_diff() -> float:
+	if ghost_prog.is_empty() or race.phase != "racing":
+		return INF
+	var target := race.player.progress
+	var lo := 0
+	var hi := ghost_prog.size() - 1
+	if target > ghost_prog[hi]:
+		return INF
+	while lo < hi:
+		var mid := (lo + hi) / 2
+		if ghost_prog[mid] < target:
+			lo = mid + 1
+		else:
+			hi = mid
+	var t := float(lo)
+	if lo > 0:
+		var a := ghost_prog[lo - 1]
+		var b := ghost_prog[lo]
+		if b > a:
+			t = lo - 1 + (target - a) / (b - a)
+	return race.time - t / RaceSim.GHOST_RATE
 
 
 func _update_ghost() -> void:

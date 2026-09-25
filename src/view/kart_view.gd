@@ -69,6 +69,18 @@ func setup(p_kart: KartSim, opts := {}) -> void:
 		name_tag.shaded = false
 		add_child(name_tag)
 
+	# 夜景：按涂装颜色的霓虹底盘灯
+	if opts.get("night", false):
+		var glow := OmniLight3D.new()
+		glow.name = "Underglow"
+		glow.light_color = Color(kart.paint.get("color", "#3EC6FF")).lightened(0.2)
+		glow.light_energy = 2.2
+		glow.omni_range = 4.5
+		glow.omni_attenuation = 1.4
+		glow.shadow_enabled = false
+		glow.position = Vector3(0, 0.25, 0)
+		model.body.add_child(glow)
+
 	if opts.get("engine_audio", false):
 		engine = AudioMgr.make_engine_3d()
 		if engine:
