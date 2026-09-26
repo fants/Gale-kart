@@ -3,6 +3,7 @@ extends RefCounted
 ## 赛道主题：天空、雾、光照、地面、路面、路缘、护墙、天气。
 ## 颜色一律用 "#RRGGBB" 字符串存储，使用时 Color(str) 转换。
 ## base：派生主题所基于的主题 id（场景物件、地面、特效等按 base 处理，颜色 / 光照 / 护墙用自己的）。
+## unpaved：土路赛道的路面配色（土路 / 草路 / 泥泞各两色）。
 ## fog.near / fog.far 单位米（环境雾按此换算密度）；light.sun_dir 为指向太阳的方向。
 
 const THEMES: Dictionary = {
@@ -78,10 +79,11 @@ const THEMES: Dictionary = {
 		"fog": {"color": "#D9E4C0", "near": 110.0, "far": 640.0},
 		"light": {"sun": "#FFD9A0", "sun_energy": 1.35, "sun_dir": [0.55, 0.5, -0.45], "ambient": "#E3E8C8", "ambient_energy": 0.5},
 		"ground": {"base": "#6DAF3F", "alt": "#5A9A33", "far": "#7AB84E"},
-		"shoulder": "#A08A5A",
+		"shoulder": "#78B044",
 		"road": {"base": "#7A6A58", "speck": "#8B7B68", "line": "#FFF6E0", "center": "#FFD84A"},
+		"unpaved": {"dirt_a": "#B08556", "dirt_b": "#8E6644", "grass_a": "#80B84C", "grass_b": "#62A03A", "mud_a": "#624632", "mud_b": "#4C3626"},
 		"curb": ["#E24A3B", "#FFF6E0"],
-		"wall": {"style": "fence", "a": "#F2DDB4", "b": "#A8703F"},
+		"wall": {"style": "rail", "a": "#B98A5C", "b": "#7E5534"},
 	},
 	"city": {
 		"id": "city", "time": "night", "weather": "none", "night": true,

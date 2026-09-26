@@ -4,6 +4,9 @@ extends Control
 
 var race: RaceSim
 var _poly := PackedVector2Array()
+## 支路（小路）折线与种类
+var _branch_polys: Array[PackedVector2Array] = []
+var _branch_kinds: Array[String] = []
 var _scale := 1.0
 var _offset := Vector2.ZERO
 var _center := Vector2.ZERO
@@ -35,6 +38,15 @@ func _rebuild() -> void:
 		_poly.append(_map(tr.px[i], tr.pz[i]))
 		i += step
 	_poly.append(_poly[0])
+	_branch_polys.clear()
+	_branch_kinds.clear()
+	for br in tr.branches:
+		var bp := PackedVector2Array()
+		for k in range(0, br.n, 2):
+			bp.append(_map(br.px[k], br.pz[k]))
+		bp.append(_map(br.px[br.n - 1], br.pz[br.n - 1]))
+		_branch_polys.append(bp)
+		_branch_kinds.append(br.kind)
 	queue_redraw()
 
 
@@ -51,6 +63,9 @@ func _draw() -> void:
 	if race == null or _poly.size() < 3:
 		return
 	var ink := Color("#1B1F3B")
+	for k in _branch_polys.size():
+		draw_polyline(_branch_polys[k], Color(ink, 0.7), 8.0, true)
+		draw_polyline(_branch_polys[k], Color("#F2D48A", 0.9) if _branch_kinds[k] == "shortcut" else Color("#C9B79A", 0.8), 3.5, true)
 	draw_polyline(_poly, Color(ink, 0.85), 13.0, true)
 	draw_polyline(_poly, Color("#F7FAFF", 0.92), 7.0, true)
 	# 起点线

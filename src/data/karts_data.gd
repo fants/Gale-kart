@@ -70,11 +70,11 @@ const PAINTS: Array[Dictionary] = [
 ]
 
 ## speed：极速系数；line：走线精度；aggression：道具积极性；rubber：橡皮筋强度；
-## start_boost：起步加速概率；mistakes：失误概率；instant：出弯小喷概率
+## start_boost：起步加速概率；mistakes：失误概率；instant：出弯小喷概率；shortcut：走近道的概率
 const DIFFICULTIES: Dictionary = {
-	"easy": {"id": "easy", "name": "简单", "speed": 0.88, "line": 0.55, "aggression": 0.35, "rubber": 0.6, "start_boost": 0.15, "mistakes": 0.3, "instant": 0.0},
-	"normal": {"id": "normal", "name": "普通", "speed": 0.955, "line": 0.8, "aggression": 0.6, "rubber": 0.45, "start_boost": 0.35, "mistakes": 0.12, "instant": 0.2},
-	"hard": {"id": "hard", "name": "困难", "speed": 1.0, "line": 1.0, "aggression": 0.9, "rubber": 0.3, "start_boost": 0.6, "mistakes": 0.03, "instant": 0.5},
+	"easy": {"id": "easy", "name": "简单", "speed": 0.88, "line": 0.55, "aggression": 0.35, "rubber": 0.6, "start_boost": 0.15, "mistakes": 0.3, "instant": 0.0, "shortcut": 0.1},
+	"normal": {"id": "normal", "name": "普通", "speed": 0.955, "line": 0.8, "aggression": 0.6, "rubber": 0.45, "start_boost": 0.35, "mistakes": 0.12, "instant": 0.2, "shortcut": 0.35},
+	"hard": {"id": "hard", "name": "困难", "speed": 1.0, "line": 1.0, "aggression": 0.9, "rubber": 0.3, "start_boost": 0.6, "mistakes": 0.03, "instant": 0.5, "shortcut": 0.6},
 }
 
 

@@ -1,5 +1,5 @@
 // 主题护墙。UV.x 沿赛道（米），UV.y：0 地面 .. 1 墙顶（地下部分为负）。
-// style: 0 栅栏 1 石墙 2 冰墙 3 霓虹 4 原木 5 轮胎墙
+// style: 0 栅栏 1 石墙 2 冰墙 3 霓虹 4 原木 5 轮胎墙 6 木栏杆（立柱 + 两道横木，中间镂空）
 shader_type spatial;
 render_mode cull_disabled;
 #include "res://assets/shaders/noise.gdshaderinc"
@@ -55,6 +55,16 @@ void fragment() {
 		float paint = step(0.72, v);
 		vec3 stripe = mix(color_b, vec3(0.95), step(0.5, fract(u / 2.8)));
 		col = mix(col, stripe, paint);
+		rough = 0.9;
+	} else if (style == 6) {
+		float pu = fract(u / 2.2);
+		float post = step(pu, 0.09);
+		float rail = step(0.32, UV.y) * step(UV.y, 0.52) + step(0.74, UV.y);
+		if (post < 0.5 && (rail < 0.5 || UV.y < 0.0)) {
+			discard;
+		}
+		float grain = vnoise(vec2(u * 0.8, v * 24.0));
+		col = mix(color_a, color_b, post * 0.6 + grain * 0.35);
 		rough = 0.9;
 	}
 	// 底部接地处稍暗

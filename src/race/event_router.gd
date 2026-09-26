@@ -82,6 +82,12 @@ func handle(events: Array[Dictionary]) -> void:
 					if not replay:
 						hud.sub("尾流加速！", Color("#B98CFF"))
 					AudioMgr.play("draft")
+			"cliff_fall":
+				if me:
+					if not replay:
+						hud.sub("掉下悬崖！走崖下小路绕回去", Color("#FF8A5B"))
+					AudioMgr.play("wrong_way")
+					ctl.rig.shake(0.3)
 			"gauge_full":
 				if me:
 					AudioMgr.play("gauge_full")

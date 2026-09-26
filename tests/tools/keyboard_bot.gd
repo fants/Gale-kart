@@ -14,13 +14,15 @@ func _initialize() -> void:
 		var hard_walls := 0
 		var drifts := 0
 		var instants := 0
+		var falls := 0
 		var prev_throttle := 0.0
 		while t < 400.0 and not p.finished:
 			# 目标点：赛车线前方
 			var look := 8.0 + p.speed * 0.45
-			var ts := p.s + look / tr.spacing
-			var ti := int(tr.wrap_s(ts))
-			var pt := tr.point_at(ts, tr.racing_line[ti] * 0.8)
+			var road := tr if p.branch < 0 else tr.branches[p.branch]
+			var ts := road.wrap_s((p.s if p.branch < 0 else p.branch_s) + look / road.spacing)
+			var ti := int(ts)
+			var pt := road.point_at(ts, road.racing_line[ti] * 0.8)
 			var desired := atan2(pt.x - p.x, pt.z - p.z)
 			var diff := MathX.wrap_angle(desired - p.heading)
 			inp.steer = 0.0
@@ -65,7 +67,10 @@ func _initialize() -> void:
 							hard_walls += 1
 					"drift_start": drifts += 1
 					"instant_boost": instants += 1
+					"cliff_fall":
+						if e["kart"] == p:
+							falls += 1
 			t += 1.0 / 60.0
-		print("%-6s %s  用时 %s  撞墙 %d（重 %d）  漂移 %d  小喷 %d  最快圈 %s" % [def["id"], "完赛" if p.finished else "未完赛", MathX.format_time(p.finish_time if p.finished else t), walls, hard_walls, drifts, instants, MathX.format_time(p.best_lap)])
+		print("%-6s %s  用时 %s  撞墙 %d（重 %d）  漂移 %d  小喷 %d  掉崖 %d  最快圈 %s" % [def["id"], "完赛" if p.finished else "未完赛", MathX.format_time(p.finish_time if p.finished else t), walls, hard_walls, drifts, instants, falls, MathX.format_time(p.best_lap)])
 		race.dispose()
 	quit()

@@ -36,6 +36,13 @@ static func emit(effects: Effects, kart_views: Array[KartView], cam: Vector3, ic
 			var rp2 := kv.rear_world(1)
 			for i in effects.rate_count("d%d" % id, 16.0, dt):
 				effects.dust(rp2, Vector3(k.vx, 0.0, k.vz))
+		elif near and k.surface > 0 and k.on_ground and k.speed > 10.0:
+			# 土路 / 草路 / 泥泞：两个后轮甩起尘土、草屑、泥点，越快越多
+			var rate: float = [0.0, 7.0, 5.0, 12.0][k.surface] * clampf(k.speed / 25.0, 0.4, 1.3)
+			for side: int in [-1, 1]:
+				var rp3 := kv.rear_world(side)
+				for i in effects.rate_count("u%d%d" % [id, side], rate, dt):
+					effects.surface_kick(rp3, Vector3(k.vx, 0.0, k.vz), k.surface)
 		if near and k.in_draft and k.speed > 15.0:
 			for i in effects.rate_count("w%d" % id, 14.0, dt):
 				effects.wind(kp + Vector3(0, 0.8, 0) + fwd * 1.5, fwd)

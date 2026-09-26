@@ -155,6 +155,12 @@ func _update_homing(list: Array[Dictionary], speed: float, dt: float, hit_kind: 
 			if gap < 60.0 / track.spacing and gap > -2.0:
 				t.locked_by = maxf(t.locked_by, 0.25)
 		var p := track.point_at(fposmod(m["s_abs"], track.n), m["lateral"])
+		# 目标在支路（近道 / 悬崖下）上：追近后直接朝它飞
+		if t != null and t.branch >= 0 and absf(t.progress - float(m["s_abs"])) < 50.0 / track.spacing:
+			var cur: Vector3 = m["pos"] - Vector3(0, 1.0, 0)
+			var dv := Vector3(t.x, t.y, t.z) - cur
+			var stp := speed * dt
+			p = Vector3(t.x, t.y, t.z) if dv.length() <= stp else cur + dv.normalized() * stp
 		m["prev_pos"] = m["pos"]
 		m["pos"] = Vector3(p.x, p.y + 1.0, p.z)
 		var mp: Vector3 = m["pos"]
@@ -230,9 +236,11 @@ func use(k: KartSim) -> void:
 			water_flies.append(fly)
 			events.append({"type": "water_fly_launch", "kart": k, "target": target, "fly": fly})
 		"water":
-			var es := track.wrap_s(k.s + 30.0 / track.spacing)
-			var el := clampf(k.lateral, -track.half_width + 3.0, track.half_width - 3.0)
-			var e := track.point_at(es, el)
+			var road := _road(k)
+			var rs := road.wrap_s(_road_s(k) + 30.0 / road.spacing)
+			var el := clampf(k.lateral, -road.hw_at(rs) + 3.0, road.hw_at(rs) - 3.0)
+			var e := road.point_at(rs, el)
+			var es := rs if road == track else road.map_to_main(rs, track.n)
 			water_bombs.append({
 				"id": _new_id(), "owner": k, "t": 0.0,
 				"start": Vector3(k.x, k.y + 1.2, k.z), "end": e, "es": es, "el": el,
@@ -240,9 +248,11 @@ func use(k: KartSim) -> void:
 			})
 			events.append({"type": "water_throw", "kart": k})
 		"banana":
-			var bs := track.wrap_s(k.s - 2.8 / track.spacing)
-			var bl := clampf(k.lateral, -track.half_width + 1.0, track.half_width - 1.0)
-			var bp := track.point_at(bs, bl)
+			var road := _road(k)
+			var rs := road.wrap_s(_road_s(k) - 2.8 / road.spacing)
+			var bl := clampf(k.lateral, -road.hw_at(rs) + 1.0, road.hw_at(rs) - 1.0)
+			var bp := road.point_at(rs, bl)
+			var bs := rs if road == track else road.map_to_main(rs, track.n)
 			bananas.append({"id": _new_id(), "owner": k, "pos": bp, "s": bs, "lateral": bl, "life": 40.0, "age": 0.0, "spin": race.rng.randf() * 6.0})
 			events.append({"type": "banana_drop", "kart": k})
 		"shield":
@@ -279,6 +289,15 @@ func use(k: KartSim) -> void:
 			else:
 				k.add_boost(1.4, 0.2, "magnet")
 				events.append({"type": "magnet", "kart": k, "target": null})
+
+
+## 车所在的路（主路或支路）与其上的位置
+func _road(k: KartSim) -> TrackData:
+	return track if k.branch < 0 else track.branches[k.branch]
+
+
+func _road_s(k: KartSim) -> float:
+	return k.s if k.branch < 0 else k.branch_s
 
 
 ## AI 避障：前方 range_s 采样内、横向 lat_tol 内的危险物

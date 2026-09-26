@@ -237,6 +237,9 @@ func _apply_frame() -> void:
 		k.on_ground = flags & ReplayRecorder.F_GROUND != 0
 		k.finished = flags & ReplayRecorder.F_FINISHED != 0
 		k.offroad = flags & ReplayRecorder.F_OFFROAD != 0
+		if not track.paved:
+			var near := track.nearest(k.x, k.z, 30.0)
+			k.surface = track.surface[int(near["idx"])] if not near.is_empty() else 0
 		k.in_draft = flags & ReplayRecorder.F_DRAFT != 0
 		var bk := int(f[15])
 		k.boost_kind = ReplayRecorder.BOOST_KINDS[bk] if bk > 0 and bk < ReplayRecorder.BOOST_KINDS.size() else ""

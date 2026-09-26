@@ -171,6 +171,8 @@ func _process(dt: float) -> void:
 		inp.use_pressed = false
 
 	race.update(dt, inp)
+	if race.phase == "racing" and Game.args.has("warp") and not _warped:
+		_debug_warp()
 	if not results_sent:
 		recorder.capture_events(race.events, race.clock)
 	router.handle(race.events)
@@ -195,6 +197,34 @@ func _process(dt: float) -> void:
 			results_sent = true
 			race.recorder = null
 			race_finished.emit(summary)
+
+
+## 调试 / 截图：--warp=比例 把玩家车挪到赛道该处；--fall 顺势冲下悬崖；--route=支路 id 让自动驾驶走那条近道
+var _warped := false
+
+
+func _debug_warp() -> void:
+	_warped = true
+	var k := race.player
+	var s := float(Game.args["warp"]) * track.n
+	var h := track.heading_at(s)
+	var pos := track.point_at(s, 0.0)
+	var v := 24.0
+	if Game.args.has("fall"):
+		h -= 0.45
+		pos = track.point_at(s, track.hw_at(s) + TrackData.CLIFF_LIP - 0.5)
+	k.reset({"pos": pos, "heading": h, "s": s})
+	k.track_hint = int(s)
+	k.vx = sin(h) * v
+	k.vz = cos(h) * v
+	k.lap = 1
+	k.last_idx = int(s)
+	if Game.args.has("route") and k.ai != null:
+		for bi in track.branches.size():
+			if track.branches[bi].id == str(Game.args["route"]):
+				k.ai.route = bi
+				k.ai._decided = bi
+	rig.snap_behind(k)
 
 
 func _update_views(dt: float) -> void:

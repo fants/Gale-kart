@@ -32,9 +32,14 @@ func _init(p_track: TrackData, p_terrain: TerrainData, p_rng: RandomNumberGenera
 
 # ———————————————— 规则 ————————————————
 
-## 离所有路段足够远（间隙从护墙外侧算起）
+## 离所有路段（含支路）足够远（间隙从护墙外侧算起）
 func clear_of_track(x: float, z: float, r: float, gap := 2.0) -> bool:
-	return track.nearest(x, z, track.wall_offset + r + gap).is_empty()
+	if not track.nearest(x, z, track.wall_offset + r + gap).is_empty():
+		return false
+	for b in track.branches:
+		if not b.nearest(x, z, b.wall_offset + r + gap).is_empty():
+			return false
+	return true
 
 
 ## 不在河道（含两岸 margin 米）里

@@ -56,13 +56,38 @@ func run(t: TestUtil) -> void:
 				var dd := absf(s - float(rv["s"]))
 				if minf(dd, tr.n - dd) * tr.spacing < rv["width"] + 16.0:
 					skip = true
+			for c in terrain.crossings:
+				if Vector2(tr.px[int(s)], tr.pz[int(s)]).distance_to(c) < TerrainData.CROSS_R + TerrainData.CROSS_FADE:
+					skip = true
 			if skip:
 				continue
-			var edge := tr.point_at(s, tr.wall_offset + 1.0)
 			var road_y := tr.center_y(s)
-			worst_follow = maxf(worst_follow, absf(terrain.height_at(edge.x, edge.z) - (road_y - 0.45)))
+			for side: float in [-1.0, 1.0]:
+				# 悬崖 / 岔路口那一侧本来就不贴主路
+				if tr.edge_at(int(s), side) != TrackData.EDGE_WALL:
+					continue
+				var edge := tr.point_at(s, side * (tr.wo_at(s) + 1.0))
+				worst_follow = maxf(worst_follow, absf(terrain.height_at(edge.x, edge.z) - (road_y - 0.45)))
 		if not terrain.flat:
 			t.check(worst_follow < 1.2, "%s：护墙外侧地形贴合路面（最大偏差 %.2f m）" % [id, worst_follow])
+		# 立交：下层路面两侧地形贴合下层，上层路面下方留出净空
+		for c in terrain.crossings:
+			var lo := -1
+			var hi := -1
+			for hit in tr.nearest_all(c.x, c.y, tr.wall_offset):
+				var j: int = hit["idx"]
+				if lo < 0 or tr.py[j] < tr.py[lo]:
+					lo = j
+				if hi < 0 or tr.py[j] > tr.py[hi]:
+					hi = j
+			var worst_low := 0.0
+			for k in range(-12, 13, 3):
+				for side: float in [-1.0, 1.0]:
+					var e := tr.point_at(float(lo + k), side * (tr.wall_offset + 1.0))
+					worst_low = maxf(worst_low, absf(terrain.height_at(e.x, e.z) - (tr.center_y(float(lo + k)) - 0.45)))
+			var gh := tr.point_at(float(hi), 0.0)
+			var clear := gh.y - terrain.height_at(c.x, c.y)
+			t.check(worst_low < 1.2 and clear > 5.0, "%s：立交下层地形贴合（偏差 %.2f m），上层净空 %.1f m" % [id, worst_low, clear])
 		for rv in tr.rivers:
 			t.check(rv["ext_pos"] >= 60.0 and rv["ext_neg"] >= 60.0, "%s：河流两侧各延伸 ≥ 60 m（%.0f / %.0f）" % [id, rv["ext_pos"], rv["ext_neg"]])
 			var rp: Vector3 = rv["pos"]

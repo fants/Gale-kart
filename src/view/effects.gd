@@ -381,6 +381,29 @@ func dust(pos: Vector3, vel: Vector3) -> void:
 		_dust_c.darkened(0.35), _dust_c.darkened(0.45), 18.0, 0.5, randf_range(6.0, 12.0), DEBRIS + M_TUMBLE, 0.0, -0.1, -0.3)
 
 
+## 土路赛道上车轮甩起的东西：1 土路扬尘，2 草屑，3 泥点
+func surface_kick(pos: Vector3, vel: Vector3, kind: int) -> void:
+	var r := Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
+	match kind:
+		1:
+			var c := Color("#C9A57A")
+			_emit(_smoke, pos + Vector3(0.0, 0.15, 0.0), vel * 0.08 + r * 1.0 + Vector3(0.0, randf_range(0.4, 1.0), 0.0), randf_range(0.6, 0.9),
+				0.6, randf_range(2.0, 2.8), Color(c, 0.4), c.darkened(0.1), -0.2, 2.2, randf_range(-1.0, 1.0), PUFF, 0.0, NO_FLOOR, 0.1)
+		2:
+			var g := Color("#6FA83E").lerp(Color("#A8C85A"), randf())
+			var d := _up_dir(0.55)
+			_emit(_mix, pos + Vector3(0.0, 0.1, 0.0), vel * 0.25 + d * randf_range(1.5, 3.5), randf_range(0.45, 0.7), randf_range(0.08, 0.13), 0.06,
+				g, g.darkened(0.2), 12.0, 0.8, randf_range(6.0, 14.0), PETAL + M_TUMBLE, 0.0, -0.1, -0.3)
+		3:
+			var m := Color("#4E3726")
+			var d := _up_dir(0.6)
+			_emit(_mix, pos + Vector3(0.0, 0.12, 0.0), vel * 0.2 + d * randf_range(2.5, 5.0), randf_range(0.45, 0.65), randf_range(0.12, 0.2), 0.1,
+				m, m.darkened(0.25), 20.0, 0.4, randf_range(4.0, 10.0), DEBRIS + M_TUMBLE, 0.0, -0.1, -0.3)
+			if randf() < 0.4:
+				_emit(_smoke, pos + Vector3(0.0, 0.1, 0.0), vel * 0.05 + r * 0.6 + Vector3(0.0, 0.5, 0.0), 0.5, 0.5, 1.4,
+					Color(Color("#6B5240"), 0.35), Color("#5A4434"), -0.1, 2.5, 0.0, PUFF, 0.0, NO_FLOOR, 0.1)
+
+
 ## 尾流风线：细长半透明白线，绕开车身，沿 dir 前进但比车慢（看起来快速后掠）
 func wind(pos: Vector3, dir: Vector3) -> void:
 	var side := Vector3(dir.z, 0.0, -dir.x).normalized()
