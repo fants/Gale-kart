@@ -275,9 +275,9 @@ func smoke(pos: Vector3, vel: Vector3, big := 1.0) -> void:
 	var r := Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
 	var v := vel * 0.16 + r * 1.3 + Vector3(0.0, randf_range(0.7, 1.7), 0.0)
 	var c0 := _smoke_c0
-	c0.a *= randf_range(0.8, 1.0)
-	_emit(_smoke, pos + Vector3(0.0, 0.18, 0.0) + r * 0.12, v, randf_range(0.55, 0.9),
-		0.55 * big, randf_range(1.6, 2.3) * big, c0, _smoke_c1, -0.6, 2.4, randf_range(-1.5, 1.5), PUFF, 0.0, NO_FLOOR, 0.1)
+	c0.a *= randf_range(0.62, 0.8)
+	_emit(_smoke, pos + Vector3(0.0, 0.18, 0.0) + r * 0.12, v, randf_range(0.5, 0.8),
+		0.5 * big, randf_range(1.1, 1.6) * big, c0, _smoke_c1, -0.6, 2.4, randf_range(-1.5, 1.5), PUFF, 0.0, NO_FLOOR, 0.1)
 
 
 ## 漂移火花：tier 0 白黄 / 1 蓝（可以小喷）

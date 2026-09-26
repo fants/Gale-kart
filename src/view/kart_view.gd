@@ -61,7 +61,7 @@ func setup(p_kart: KartSim, opts := {}) -> void:
 		name_tag.fixed_size = false
 		name_tag.pixel_size = 0.0042
 		name_tag.font_size = 64
-		name_tag.outline_size = 16
+		name_tag.outline_size = 9
 		name_tag.modulate = Color(0.75, 0.75, 0.85) if opts.get("night", false) else Color(1, 1, 1)
 		name_tag.outline_modulate = Color("#1B1F3B")
 		name_tag.position = Vector3(0, 2.9, 0)
@@ -165,8 +165,11 @@ func update_view(dt: float, time: float, alpha: float, cam_pos: Vector3) -> void
 
 	if name_tag:
 		var d := cam_pos.distance_to(pos)
-		name_tag.visible = d < 70.0 and d > 7.0
-		name_tag.modulate.a = clampf((70.0 - d) / 20.0, 0.0, 1.0) * clampf((d - 7.0) / 4.0, 0.0, 1.0)
+		# 远处名牌字太小时描边会糊成深色方块，所以 50 m 外淡出隐藏
+		name_tag.visible = d < 50.0 and d > 7.0
+		var a := clampf((50.0 - d) / 15.0, 0.0, 1.0) * clampf((d - 7.0) / 4.0, 0.0, 1.0)
+		name_tag.modulate.a = a
+		name_tag.outline_modulate.a = a
 
 	if engine:
 		engine.pitch_scale = clampf(0.7 + sp01 * 1.3 + (0.15 if boosting else 0.0), 0.5, 2.6)

@@ -12,7 +12,7 @@ static func emit(effects: Effects, kart_views: Array[KartView], cam: Vector3, ic
 		var id := k.index * 2
 		var fwd := Vector3(sin(k.heading), 0.0, cos(k.heading))
 		if near and drifting:
-			var rate := 34.0 if k.drifting else 18.0
+			var rate := 30.0 if k.drifting else 10.0
 			for side: int in [-1, 1]:
 				var rp := kv.rear_world(side)
 				for i in effects.rate_count("s%d%d" % [id, side], rate, dt):
