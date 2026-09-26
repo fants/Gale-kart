@@ -47,6 +47,7 @@ func setup(p_ctl: RaceController, p_gp: Dictionary) -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(center)
+	ui.add_child(Widgets.pin(Widgets.creator_badge(1.0), Control.PRESET_BOTTOM_LEFT, Vector2(48, 40)))
 
 	# 主面板
 	main_panel = Widgets.panel()

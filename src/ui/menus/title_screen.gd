@@ -82,6 +82,7 @@ func build() -> void:
 	ver.offset_bottom = -26
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(ver)
+	add_child(Widgets.pin(Widgets.creator_badge(1.3), Control.PRESET_BOTTOM_RIGHT, Vector2(40, 70)))
 
 
 func on_enter() -> void:

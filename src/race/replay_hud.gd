@@ -39,6 +39,7 @@ func setup(track_name: String) -> void:
 		band.offset_right = 0.0
 		band.offset_top = 0.0 if top else -70.0
 		band.offset_bottom = 70.0 if top else 0.0
+	root.add_child(Widgets.pin(Widgets.creator_badge(0.85, false), Control.PRESET_CENTER_TOP, Vector2(0, 8)))
 	_rec = _label("● REPLAY", 34, RED, true)
 	_rec.position = Vector2(40, 14)
 	root.add_child(_rec)

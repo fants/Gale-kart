@@ -533,6 +533,52 @@ static func badge(text: String, color := UiTheme.MINT, size := 24, text_color :=
 	return p
 
 
+## 把控件钉在父控件的某个角 / 边中点（按最小尺寸向内生长），margin 为离边的距离
+static func pin(c: Control, preset: Control.LayoutPreset, margin: Vector2) -> Control:
+	c.set_anchors_preset(preset)
+	var right := preset in [Control.PRESET_TOP_RIGHT, Control.PRESET_BOTTOM_RIGHT, Control.PRESET_CENTER_RIGHT]
+	var bottom := preset in [Control.PRESET_BOTTOM_LEFT, Control.PRESET_BOTTOM_RIGHT, Control.PRESET_CENTER_BOTTOM]
+	var hcenter := preset in [Control.PRESET_CENTER_TOP, Control.PRESET_CENTER_BOTTOM, Control.PRESET_CENTER]
+	c.grow_horizontal = Control.GROW_DIRECTION_BOTH if hcenter else (Control.GROW_DIRECTION_BEGIN if right else Control.GROW_DIRECTION_END)
+	c.grow_vertical = Control.GROW_DIRECTION_BEGIN if bottom else Control.GROW_DIRECTION_END
+	var x := 0.0 if hcenter else (-margin.x if right else margin.x)
+	var y := -margin.y if bottom else margin.y
+	c.offset_left = x
+	c.offset_right = x
+	c.offset_top = y
+	c.offset_bottom = y
+	return c
+
+
+## 作者署名徽章：铂金小鸟头像 + 「bilibili @名字」。solid：白底粉边（菜单）；否则半透明深底（比赛 / 回放水印）
+static func creator_badge(k := 1.0, solid := true) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg := Color(1, 1, 1, 0.95) if solid else Color(INK, 0.42)
+	var sb := UiTheme.box(bg, int(40 * k), int(3 * k) if solid else 0, Credits.PINK, int(4 * k) if solid else 0, Vector4(8, 3, 22, 5) * k)
+	p.add_theme_stylebox_override("panel", sb)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", int(6 * k))
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(h)
+	var ic := TextureRect.new()
+	ic.texture = load("res://assets/ui/creator/mascot.png")
+	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ic.custom_minimum_size = Vector2(54, 54) * k
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(ic)
+	var bl := label(Credits.PLATFORM, int(26 * k), Credits.BLUE if solid else Credits.BLUE.lightened(0.45))
+	var nm := label("@" + Credits.NAME, int(30 * k), INK if solid else UiTheme.WHITE)
+	for l: Label in [bl, nm]:
+		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		if not solid:
+			l.add_theme_color_override("font_outline_color", INK)
+			l.add_theme_constant_override("outline_size", int(6 * k))
+		h.add_child(l)
+	return p
+
+
 ## 键帽（键盘）或手柄按键圆牌（pad：A 绿 / B 红 / X 蓝 / Y 黄）
 static func keycap(text: String, pad := false, size := 22) -> PanelContainer:
 	var p := PanelContainer.new()

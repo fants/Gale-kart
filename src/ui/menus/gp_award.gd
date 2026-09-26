@@ -13,6 +13,7 @@ var _final: Dictionary = {}
 
 func build() -> void:
 	stage = "podium"
+	add_child(Widgets.pin(Widgets.creator_badge(1.0), Control.PRESET_BOTTOM_LEFT, Vector2(70, 40)))
 	_final = Game.gp_finish()
 	var gp := Game.gp
 	var rank: int = _final.get("rank", 8)

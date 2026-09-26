@@ -94,6 +94,7 @@ func build() -> void:
 	ride.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(ride)
 	_ride_panel = ride
+	add_child(Widgets.pin(Widgets.creator_badge(1.1), Control.PRESET_TOP_RIGHT, Vector2(56, 44)))
 	var rrow := HBoxContainer.new()
 	rrow.add_theme_constant_override("separation", 20)
 	ride.add_child(rrow)

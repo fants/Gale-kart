@@ -17,6 +17,7 @@ var _new_order: Array[Dictionary] = []
 
 func build() -> void:
 	stage = "podium"
+	add_child(Widgets.pin(Widgets.creator_badge(1.0), Control.PRESET_BOTTOM_LEFT, Vector2(70, 40)))
 	var gp := Game.gp
 	var tracks: Array = gp.get("tracks", [])
 	var done := int(gp.get("index", 0)) + 1

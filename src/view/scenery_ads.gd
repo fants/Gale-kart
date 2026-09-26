@@ -6,7 +6,9 @@ extends RefCounted
 const DIR := "res://assets/textures/ads/"
 const DAY: Array[String] = ["ad_nitro", "ad_soda", "ad_tires", "ad_gp", "ad_marshmallow", "ad_banana", "ad_speed"]
 const NIGHT: Array[String] = ["ad_neon", "ad_nitro", "ad_gp", "ad_tires", "ad_speed", "ad_soda"]
-const BANNERS: Array[String] = ["banner_gp", "banner_start"]
+const BANNERS: Array[String] = ["banner_gp", "banner_creator", "banner_start"]
+## 作者（bilibili）的广告牌：每条赛道第一块一定是它，之后每隔几块再出现一次
+const CREATOR: Array[String] = ["ad_creator", "ad_creator_2"]
 const BOARD_W := 9.0
 const BOARD_H := 4.5
 const BOARD_LIFT := 2.4
@@ -62,11 +64,12 @@ static func _billboards(s: Scenery, night: bool) -> void:
 	var want := clampi(int(t.length / 150.0), 5, 11)
 	var placed := 0
 	var used: Array[Vector3] = []
-	var pos := s.rng.randf() * t.n
+	# 第一块（作者广告）从起点前方 70 m 开始找位置，开局就能看到
+	var pos := 70.0 / t.spacing
 	var tries := 0
 	while placed < want and tries < 60:
 		tries += 1
-		pos += (s.rf(90.0, 140.0) if tries > 1 else 0.0) / t.spacing
+		pos += (s.rf(90.0, 140.0) if placed > 0 or tries > 6 else 12.0 * float(tries > 1)) / t.spacing
 		var i := int(fposmod(pos, t.n))
 		if absf(t.curv[i]) > 1.0 / 55.0:
 			continue
@@ -110,7 +113,10 @@ static func _billboards(s: Scenery, night: bool) -> void:
 		face_mesh.size = Vector2(BOARD_W, BOARD_H)
 		var fm := MeshInstance3D.new()
 		fm.mesh = face_mesh
-		fm.material_override = _mat(ids[placed % ids.size()], night, cache)
+		var ad := ids[placed % ids.size()]
+		if placed % 4 == 0:
+			ad = CREATOR[(placed / 4) % CREATOR.size()]
+		fm.material_override = _mat(ad, night, cache)
 		fm.position = Vector3(0, cy, 0.05)
 		fm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		node.add_child(fm)

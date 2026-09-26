@@ -561,6 +561,7 @@ func _demo_gp(races: int) -> void:
 ##   gp：新星杯 4 场（自动驾驶 1 圈）→ 每场结算 → 积分榜 → 颁奖
 ##   garage：车库页在预览区按住鼠标左右拖动，检查转台旋转与松手惯性
 ##   records：最佳纪录页按下键滚动，检查能滚到底
+##   replay：跑一场 → 结算 → 精彩回放
 func _boot_flow() -> void:
 	args["autopilot"] = "true"
 	Store.selection["laps"] = 1
@@ -637,6 +638,16 @@ func _boot_flow() -> void:
 			_flow.append([2.6, "shot", "gp_award"])
 			_flow.append([0.1, "check", "gp_final"])
 			_flow.append([0.1, "done"])
+		"replay":
+			# 跑一场（自动驾驶 1 圈）→ 结算 → 精彩回放，截回放画面
+			start_single(sel)
+			_flow = [
+				[0.1, "wait_race"],
+				[0.1, "wait_results"],
+				[1.0, "play_replay"],
+				[4.0, "shot", "replay"],
+				[0.5, "done"],
+			]
 		_:
 			goto_title()
 			_flow = [
@@ -694,6 +705,14 @@ func _flow_step(dt: float) -> void:
 			if menu == null or not (menu.current() is ResultsScreen):
 				return
 			print("流程冒烟：结算页已显示")
+		"play_replay":
+			var rs := menu.current() as ResultsScreen if menu else null
+			var rep: Dictionary = rs.summary.get("replay", {}) if rs else {}
+			if rep.is_empty():
+				_flow_fail("结算页没有回放数据")
+				return
+			start_replay(rep)
+			print("流程冒烟：开始播放回放")
 		"wait_page":
 			var want := str(step[2])
 			if menu == null or menu.current() == null or menu.busy:

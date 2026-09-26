@@ -18,6 +18,7 @@ var _panel: Control
 
 func build() -> void:
 	stage = "podium"
+	add_child(Widgets.pin(Widgets.creator_badge(1.0), Control.PRESET_BOTTOM_LEFT, Vector2(70, 40)))
 	summary = params.get("summary", {})
 	in_gp = not Game.gp.is_empty()
 	var solo: bool = summary.get("solo", false)

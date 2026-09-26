@@ -79,6 +79,14 @@ func setup(p_race: RaceSim) -> void:
 	_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_flash)
+	# 作者水印：直接挂在 CanvasLayer 上，按 H 隐藏 HUD 录视频时也保留
+	var wm := Widgets.creator_badge(0.8, false)
+	wm.modulate.a = 0.9
+	var wm_root := Control.new()
+	wm_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wm_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wm_root.add_child(Widgets.pin(wm, Control.PRESET_BOTTOM_LEFT, Vector2(36, 30)))
+	add_child(wm_root)
 
 
 # ———————————————— 构建 ————————————————

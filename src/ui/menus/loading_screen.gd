@@ -140,6 +140,8 @@ func setup(sel: Dictionary, gp: Dictionary) -> void:
 	thumb.progress = 0.0
 	card.add_child(thumb)
 
+	ui.add_child(Widgets.pin(Widgets.creator_badge(1.1), Control.PRESET_TOP_RIGHT, Vector2(110, 56)))
+
 	# 底部：小贴士 + 进度
 	var bottom := HBoxContainer.new()
 	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
@@ -159,7 +161,10 @@ func setup(sel: Dictionary, gp: Dictionary) -> void:
 	var tb := Widgets.badge("小贴士", UiTheme.SUN, 26)
 	tb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	trow.add_child(tb)
-	var tl := Widgets.label(TIPS[randi() % TIPS.size()], 30)
+	var tip_text := TIPS[randi() % TIPS.size()]
+	if randf() < 0.25:
+		tip_text = "关注 %s，看更多疾风卡丁的比赛视频！" % Credits.tag()
+	var tl := Widgets.label(tip_text, 30)
 	tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
