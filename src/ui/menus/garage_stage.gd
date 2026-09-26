@@ -17,10 +17,18 @@ var _floaters: Array[Dictionary] = []
 var _float_pivot: Node3D
 var _boxes: Array[MeshInstance3D] = []
 var _burst: CPUParticles3D
+## 鼠标拖拽旋转转台（只绕竖直轴）：每像素转动的弧度、松手后的惯性、停手后暂停自动旋转的时长
+const DRAG_RAD_PER_PX := 0.011
+const DRAG_HOLD := 2.5
+var dragging := false
+var _drag_accum := 0.0
+var _drag_vel := 0.0
+var _drag_hold := 0.0
 
 
 func _ready() -> void:
 	name = "GarageStage"
+	add_to_group("garage_stage")
 	_build_stage(Color("#7FD6FF"), Color("#FFE3F1"), Color("#CDEBFF"), 3.6, UiTheme.BUBBLE)
 	target = Vector3(0.0, 0.35, 0.0)
 	subject_radius = 3.0
@@ -163,6 +171,27 @@ func show_kart(kart_id: String, character_id: String, paint_id: String) -> void:
 		_start_emote()
 
 
+func drag_begin() -> void:
+	dragging = true
+	_drag_accum = 0.0
+	_drag_vel = 0.0
+	spin_boost = 0.0
+
+
+## dx 为鼠标水平移动的像素（向右为正：转台近侧跟着向右转）
+func drag_by(dx: float) -> void:
+	if dragging:
+		_drag_accum += dx * DRAG_RAD_PER_PX
+
+
+func drag_end() -> void:
+	if not dragging:
+		return
+	dragging = false
+	_drag_vel = clampf(_drag_vel, -8.0, 8.0)
+	_drag_hold = DRAG_HOLD
+
+
 func _start_emote() -> void:
 	if model == null:
 		return
@@ -174,7 +203,17 @@ func _start_emote() -> void:
 func _process(dt: float) -> void:
 	super(dt)
 	spin_boost *= exp(-dt * 3.0)
-	table.rotation.y += dt * (0.3 + spin_boost)
+	if dragging:
+		# 拖动中：转台完全跟手，同时估计角速度供松手后的惯性使用
+		table.rotation.y += _drag_accum
+		_drag_vel = lerpf(_drag_vel, _drag_accum / maxf(dt, 0.001), 0.5)
+		_drag_accum = 0.0
+	else:
+		_drag_vel *= exp(-dt * 3.5)
+		_drag_hold = maxf(0.0, _drag_hold - dt)
+		# 停手一段时间后自动旋转慢慢恢复
+		var auto := 1.0 - clampf(_drag_hold / 1.0, 0.0, 1.0)
+		table.rotation.y += dt * (0.3 * auto + spin_boost + _drag_vel)
 	if model:
 		_hop = maxf(0.0, _hop - dt)
 		var u := 1.0 - _hop / 0.42

@@ -77,13 +77,36 @@ func _ready() -> void:
 	await RenderingServer.frame_post_draw
 	for i in views.size():
 		var img := views[i].get_texture().get_image()
+		_round_bottom(img)
 		textures[ids[i]] = ImageTexture.create_from_image(img)
 	baked.emit()
 	queue_free()
 
 
-## 头像控件：代表色圆牌 + 头像（未烘焙完成时显示名字首字）
+## 头像下半身按圆牌裁成圆底（头可以探出圆牌上沿）。圆牌在贴图里的位置与 Avatar._draw 的绘制比例一致
+static func _round_bottom(img: Image) -> void:
+	img.convert(Image.FORMAT_RGBA8)
+	var w := img.get_width()
+	var h := img.get_height()
+	var r := w / Avatar.TEX_SCALE
+	var cx := w * 0.5
+	var cy := h * 0.5 + Avatar.TEX_SHIFT / Avatar.TEX_SCALE * h
+	for y in h:
+		if y < cy:
+			continue
+		for x in w:
+			var d := Vector2(x + 0.5 - cx, y + 0.5 - cy).length()
+			if d > r - 1.5:
+				var c := img.get_pixel(x, y)
+				c.a *= clampf((r + 0.5 - d) / 2.0, 0.0, 1.0)
+				img.set_pixel(x, y, c)
+
+
+## 头像控件：浅色圆牌 + 头像（未烘焙完成时显示名字首字）
 class Avatar extends Control:
+	## 头像贴图边长 = 圆牌半径 × TEX_SCALE；贴图相对圆牌中心上移 圆牌半径 × TEX_SHIFT
+	const TEX_SCALE := 2.1
+	const TEX_SHIFT := 0.06
 	var cid := ""
 	var color := UiTheme.SUN
 	var tex: Texture2D = null
@@ -110,15 +133,15 @@ class Avatar extends Control:
 	func _draw() -> void:
 		var r := minf(size.x, size.y) / 2.0
 		var c := size / 2.0
-		draw_circle(c, r, UiTheme.INK)
-		draw_circle(c, r - 3.0, color)
-		draw_circle(c + Vector2(0, r * 0.35), r * 0.62, color.lightened(0.25))
+		# 代表色调成浅色当圆牌底色（不加深色描边；深色代表色也不会变成黑圆）
+		var base := color.lerp(UiTheme.WHITE, 0.55)
+		draw_circle(c, r, base)
+		draw_circle(c + Vector2(0, r * 0.35), r * 0.62, base.lightened(0.3))
 		if tex:
-			var s := r * 2.1
-			draw_texture_rect(tex, Rect2(c - Vector2(s, s) / 2.0 + Vector2(0, -r * 0.06), Vector2(s, s)), false)
+			var s := r * TEX_SCALE
+			draw_texture_rect(tex, Rect2(c - Vector2(s, s) / 2.0 + Vector2(0, -r * TEX_SHIFT), Vector2(s, s)), false)
 		else:
 			var f := UiTheme.font_cn()
 			var fs := int(r * 0.9)
 			var w := f.get_string_size(initial, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 			draw_string(f, c + Vector2(-w / 2.0, fs * 0.35), initial, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, UiTheme.INK)
-		draw_arc(c, r - 1.5, 0.0, TAU, 64, UiTheme.INK, 3.0, true)

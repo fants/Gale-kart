@@ -99,9 +99,21 @@ func build() -> void:
 	root_row.add_child(right)
 	_preview = Control.new()
 	_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 右侧 3D 预览：按住鼠标左键左右拖动旋转车手与赛车
+	_preview.mouse_filter = Control.MOUSE_FILTER_STOP
+	_preview.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_preview.gui_input.connect(_on_preview_input)
 	_preview.resized.connect(func() -> void: root.refresh_view.call_deferred())
 	right.add_child(_preview)
+	var hint := Widgets.label("左右拖动可旋转", 20, Color(UiTheme.INK_2, 0.7))
+	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_preview.add_child(hint)
+	hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	hint.offset_left = -120
+	hint.offset_right = 120
+	hint.offset_top = -40
+	hint.offset_bottom = -8
 	var info := _build_info_card()
 	right.add_child(info)
 	start_button = Widgets.button("开始比赛" if kind != "gp" else "开始大奖赛", "primary", "flag", UiTheme.WHITE)
@@ -658,6 +670,25 @@ func default_focus() -> Control:
 
 func garage_selection() -> Dictionary:
 	return sel
+
+
+## 预览区的鼠标拖拽 → 车库转台左右旋转
+func _on_preview_input(ev: InputEvent) -> void:
+	if ev is InputEventMouseButton and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		if ev.pressed:
+			get_tree().call_group("garage_stage", "drag_begin")
+		else:
+			get_tree().call_group("garage_stage", "drag_end")
+		_preview.accept_event()
+	elif ev is InputEventMouseMotion and ((ev as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		get_tree().call_group("garage_stage", "drag_by", (ev as InputEventMouseMotion).relative.x)
+		_preview.accept_event()
+
+
+func _exit_tree() -> void:
+	# 离开页面时如果还按着鼠标，结束拖拽，避免转台停在拖拽状态
+	if is_inside_tree():
+		get_tree().call_group("garage_stage", "drag_end")
 
 
 func view_rect() -> Rect2:

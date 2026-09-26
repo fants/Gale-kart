@@ -34,6 +34,9 @@ var _quit_after := -1.0
 var _starting := false
 var _flow: Array = []
 var _flow_t := 0.0
+## 拖拽流程用：模拟鼠标位置、拖动开始时的转台角度
+var _flow_mouse := Vector2.ZERO
+var _flow_yaw0 := 0.0
 
 
 func _ready() -> void:
@@ -554,6 +557,7 @@ func _demo_gp(races: int) -> void:
 ##   smoke：标题 → 主菜单 → 赛前设置 → 开始比赛（自动驾驶 1 圈）→ 冲线 → 结算
 ##   pause：比赛中 Esc 暂停 → Esc 继续 → P 暂停 → 设置子面板 → 返回 → 退出比赛 → 确认 → 主菜单
 ##   gp：新星杯 4 场（自动驾驶 1 圈）→ 每场结算 → 积分榜 → 颁奖
+##   garage：车库页在预览区按住鼠标左右拖动，检查转台旋转与松手惯性
 func _boot_flow() -> void:
 	args["autopilot"] = "true"
 	Store.selection["laps"] = 1
@@ -562,6 +566,21 @@ func _boot_flow() -> void:
 	var sel := Store.selection.duplicate()
 	var which := str(args.get("flow", "smoke"))
 	match which:
+		"garage":
+			# 车库预览拖拽旋转：按下 → 分 6 次向右拖 300 像素 → 松开，检查转角与惯性
+			goto_menu("setup", {"kind": "quick", "tab": 1})
+			_flow = [
+				[0.1, "wait_page", "SetupScreen"],
+				[1.5, "shot", "garage_before"],
+				[0.1, "drag", "down", 0.0],
+			]
+			for i in 6:
+				_flow.append([0.05, "drag", "move", 50.0])
+			_flow.append([0.05, "check", "garage_rotated"])
+			_flow.append([0.0, "drag", "up", 0.0])
+			_flow.append([0.4, "check", "garage_inertia"])
+			_flow.append([0.1, "shot", "garage_after"])
+			_flow.append([0.1, "done"])
 		"pause":
 			start_single(sel)
 			_flow = [
@@ -645,6 +664,8 @@ func _flow_step(dt: float) -> void:
 		"key":
 			var code: Key = step[2]
 			_press_key(code)
+		"drag":
+			_mouse_drag(str(step[2]), float(step[3]))
 		"request_pause":
 			# 与比赛里按 Esc / P / Start 走同一条路径（窗口没有焦点时 PlayerInput 不读按键）
 			if race_ctl:
@@ -686,6 +707,22 @@ func _flow_step(dt: float) -> void:
 						_flow_fail("应已继续比赛")
 						return
 					print("流程冒烟：已继续比赛")
+				"garage_rotated":
+					# 300 像素 × 0.011 弧度 / 像素 ≈ 3.3 弧度（拖动中自动旋转暂停）
+					var g := menu.garage if menu else null
+					var turned := g.table.rotation.y - _flow_yaw0 if g else 0.0
+					if g == null or not g.dragging or absf(turned - 3.3) > 0.35:
+						_flow_fail("拖动后转台应转过约 3.3 弧度（实际 %.2f，拖拽中 %s）" % [turned, str(g.dragging if g else false)])
+						return
+					print("流程冒烟：拖动 300 像素，转台转过 %.2f 弧度" % turned)
+					_flow_yaw0 = g.table.rotation.y
+				"garage_inertia":
+					var g2 := menu.garage if menu else null
+					var more := g2.table.rotation.y - _flow_yaw0 if g2 else 0.0
+					if g2 == null or g2.dragging or more <= 0.05:
+						_flow_fail("松手后应有同方向的惯性（实际 %.2f）" % more)
+						return
+					print("流程冒烟：松手后惯性继续转了 %.2f 弧度，已退出拖拽" % more)
 				"gp_final":
 					var fin: Dictionary = gp.get("final", {})
 					if fin.is_empty():
@@ -698,6 +735,38 @@ func _flow_step(dt: float) -> void:
 	if not _flow.is_empty():
 		_flow.pop_front()
 	_flow_t = 0.0
+
+
+## 模拟鼠标拖拽（车库预览区）：phase 为 down / move / up，dx 为水平移动像素
+func _mouse_drag(phase: String, dx: float) -> void:
+	var ss := menu.current() as SetupScreen if menu else null
+	if ss == null:
+		_flow_fail("当前不是赛前设置页")
+		return
+	if phase == "down":
+		_flow_mouse = ss._preview.get_global_rect().get_center()
+		_flow_yaw0 = menu.garage.table.rotation.y if menu.garage else 0.0
+		var b := InputEventMouseButton.new()
+		b.button_index = MOUSE_BUTTON_LEFT
+		b.pressed = true
+		b.position = _flow_mouse
+		b.global_position = _flow_mouse
+		Input.parse_input_event(b)
+	elif phase == "move":
+		var m := InputEventMouseMotion.new()
+		_flow_mouse += Vector2(dx, 0.0)
+		m.position = _flow_mouse
+		m.global_position = _flow_mouse
+		m.relative = Vector2(dx, 0.0)
+		m.button_mask = MOUSE_BUTTON_MASK_LEFT
+		Input.parse_input_event(m)
+	else:
+		var u := InputEventMouseButton.new()
+		u.button_index = MOUSE_BUTTON_LEFT
+		u.pressed = false
+		u.position = _flow_mouse
+		u.global_position = _flow_mouse
+		Input.parse_input_event(u)
 
 
 ## 模拟按键：按下，0.05 s 后松开（比赛输入是逐帧轮询的）
