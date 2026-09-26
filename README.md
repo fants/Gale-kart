@@ -4,8 +4,9 @@
 
 ## 运行
 
-1. 安装 Godot 4.7（`brew install --cask godot`）。
-2. 双击 `开始游戏.command`，或在终端运行 `godot --path .`；也可以用 Godot 编辑器打开项目后按 F5。
+- **直接玩（不需要装 Godot）**：`build/macos/GaleKart.zip` 解压后双击「疾风卡丁 GALE KART.app」（Intel / Apple 芯片通用）；Windows 用 `build/windows/GaleKart.exe`。导出方法见下文「开发」。
+- **从源码运行**：安装 Godot 4.7（`brew install --cask godot`）后双击 `开始游戏.command`，或在终端运行 `godot --path .`，也可以用 Godot 编辑器打开项目后按 F5。
+- 每台电脑**第一次**进入比赛时要编译着色器，前几十秒可能会卡顿，之后就流畅了（只会发生一次）。
 
 ## 内容
 
@@ -14,6 +15,9 @@
 - **5 款赛车**（极速 / 加速 / 操控 / 漂移 / 氮气 / 重量各不相同）× **12 位车手** × **5 种涂装**
 - **7 位 AI 对手**，简单 / 普通 / 困难三档，1 / 3 / 5 圈
 - **道具**：氮气、导弹、水炸弹、香蕉皮、天使护盾、乌云、磁铁、雷暴、飞碟、水苍蝇；按名次加权发放
+- **完整流程**：标题 → 主菜单 → 赛前设置（3D 车库实时预览、12 位车手头像、赛道线稿卡片）→ 加载 → 开场航拍 → 倒计时 → 比赛 → 冲线 → 3D 颁奖台结算 → 精彩回放 / 再来一局 / 下一赛道；暂停菜单、设置（音量、画质、全屏、垂直同步、视角、自动小喷、显示 FPS）、最佳纪录、操作说明与道具图鉴
+- **6 个主题场景**：风车与红顶小屋、金字塔与绿洲、积雪松林与冰屋、河谷瀑布与木桥、看台与维修区、霓虹楼宇与夜市招牌；落叶 / 沙尘 / 飘雪 / 萤火虫天气
+- **特效**：漂移烟与胎痕、白 → 蓝漂移火花（提示可以小喷）、氮气尾焰、尾流风线、爆炸冲击波、护盾 / 水泡 / 飞碟 / 乌云等状态特效、速度线与氮气径向模糊
 - **精彩回放**：电视转播 / 追尾 / 环绕 / 俯瞰机位，自动导播，可变速、暂停、切换焦点车，一键隐藏界面，方便录视频
 - 全部音效与 8 首 BGM 离线合成；模型来自 Kenney（CC0），字体 ZCOOL KuaiLe / Bungee（OFL）
 
@@ -50,8 +54,18 @@ godot --headless --path . -s tests/tools/handling.gd      # 每款车的操控�
 godot --headless --path . -s tests/tools/keyboard_bot.gd  # 模拟键盘玩家跑完所有赛道
 python3 tools/gen_audio.py                                # 重新合成全部音效与音乐
 
-# 调试 / 截图 / 演示：直接开一场无人驾驶的比赛并定时截图
+# 调试 / 截图 / 演示：直接开一场无人驾驶的比赛并定时截图（加 --then-replay 可在冲线后直接进入回放）
 godot --path . --fixed-fps 60 -- --race=forest --mode=item --autopilot --shots=5,20 --out=/tmp/shots --quit-after=21 --size=1920x1080
+# 打开某个菜单页面截图；或自动操作跑完整流程（smoke / pause / gp）
+godot --path . -- --menu=setup --shots=2 --out=/tmp/shots --quit-after=3
+godot --path . -- --flow=gp
+godot --path . --fixed-fps 60 -s tests/tools/fx_gallery.gd -- --out=/tmp/fx   # 特效画廊
+
+# 导出（需要先安装 4.7.2 导出模板）
+godot --path . --export-release "macOS" build/macos/GaleKart.zip
+godot --path . --export-release "Windows" build/windows/GaleKart.exe
 ```
+
+素材：模型来自 Kenney（CC0，见 `assets/models/LICENSE-Kenney.txt`），字体 ZCOOL KuaiLe 与 Bungee（OFL，见 `assets/fonts/`），音效与音乐由 `tools/gen_audio.py` 合成。
 
 结构：`src/sim/` 是与渲染无关的仿真层（120 Hz 固定子步，可无界面运行，移植自网页版参考实现），`src/view/` 是 3D 表现层，`src/race/` 是比赛总控、事件分发与回放，`src/ui/` 是 HUD 与菜单，`src/autoload/` 是全局流程、存档、音频。设计文档见 `docs/superpowers/specs/2026-09-26-gale-kart-godot-design.md`。
