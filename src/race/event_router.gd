@@ -114,7 +114,7 @@ func handle(events: Array[Dictionary]) -> void:
 					ctl.vibrate(0.2, float(e["strength"]) * 0.6, 0.18)
 			"item_box":
 				var bp: Vector3 = e["box"]["pos"]
-				fx.burst("shards", bp + Vector3(0, 1.3, 0))
+				fx.burst("shards", bp + Vector3(0, 1.0, 0))
 				if me:
 					AudioMgr.play("item_get", {"volume": 0.5})
 				else:

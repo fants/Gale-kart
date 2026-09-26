@@ -5,9 +5,9 @@ extends Node3D
 
 const BOX_SHADER := preload("res://assets/shaders/item_box.gdshader")
 const BLOB_SHADER := preload("res://assets/shaders/fx_blob.gdshader")
-const BOX_SIZE := 1.7
+const BOX_SIZE := 1.25
 ## 道具箱悬浮高度（相对路面）
-const BOX_LIFT := 1.3
+const BOX_LIFT := 1.0
 
 
 ## 按 id 复用的节点池
