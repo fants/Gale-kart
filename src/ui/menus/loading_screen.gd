@@ -1,7 +1,7 @@
 class_name LoadingScreen
 extends CanvasLayer
 ## 加载页：赛道主题色条纹背景、赛道名 / 英文名 / 难度、赛道线稿随进度逐段画出、转动的轮胎、随机小贴士。
-## 显示入场动画后发出 shown；构建完成后调用 finish() 走满进度并淡出。
+## 显示入场动画后发出 shown；构建期间 set_progress 报告真实进度；构建完成后调用 finish() 走满进度并淡出。
 
 signal shown
 
@@ -26,7 +26,7 @@ var bar: ProgressBar
 var pct: Label
 var wheel: Control
 var _p := 0.0
-var _target := 0.72
+var _target := 0.03
 var _t := 0.0
 var _finishing := false
 
@@ -207,7 +207,7 @@ func setup(sel: Dictionary, gp: Dictionary) -> void:
 
 func _process(dt: float) -> void:
 	_t += dt
-	var speed := 2.4 if _finishing else 0.9
+	var speed := 2.4 if _finishing else 1.2
 	_p = move_toward(_p, _target, dt * speed)
 	if thumb:
 		thumb.progress = _p
@@ -218,6 +218,11 @@ func _process(dt: float) -> void:
 	if wheel:
 		(wheel as Tire).angle += dt * 9.0
 		wheel.queue_redraw()
+
+
+## 构建进度（0..1，只增不减）；显示值平滑追赶
+func set_progress(p: float) -> void:
+	_target = maxf(_target, clampf(p, 0.0, 1.0) * 0.97)
 
 
 ## 构建完成：进度走满后淡出并销毁

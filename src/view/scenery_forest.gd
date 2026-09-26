@@ -8,10 +8,17 @@ const FALL_SHADER := preload("res://assets/shaders/waterfall.gdshader")
 
 
 static func build(s: Scenery) -> void:
-	for rv in s.track.rivers:
-		_river(s, rv)
-	_trees(s)
-	_ground_detail(s)
+	for step in steps(s):
+		step.call()
+
+
+static func steps(s: Scenery) -> Array[Callable]:
+	return [
+		func() -> void:
+			for rv in s.track.rivers:
+				_river(s, rv),
+		func() -> void: _trees(s),
+	] + ground_detail_steps(s)
 
 
 # ———————————————— 河流 ————————————————
@@ -289,6 +296,21 @@ static func _trees(s: Scenery) -> void:
 
 
 static func _ground_detail(s: Scenery) -> void:
+	for step in ground_detail_steps(s):
+		step.call()
+
+
+## 地面细节拆成几步（分帧构建用；随机数的使用顺序与一次做完相同）
+static func ground_detail_steps(s: Scenery) -> Array[Callable]:
+	return [
+		func() -> void: _gd_rocks(s),
+		func() -> void: _gd_logs(s),
+		func() -> void: _gd_bushes(s),
+		func() -> void: _gd_small(s),
+	]
+
+
+static func _gd_rocks(s: Scenery) -> void:
 	var P := s.placer
 	# 大石头与山坡上的峭壁露头
 	var big := [s.kind("nature/rock_largeA", Scenery.BIG), s.kind("nature/rock_largeD", Scenery.BIG), s.kind("nature/rock_tallA", Scenery.BIG), s.kind("nature/rock_tallH", Scenery.BIG)]
@@ -300,13 +322,25 @@ static func _ground_detail(s: Scenery) -> void:
 			var g := s.terrain.height_at(q.x, q.z)
 			var sc := s.rf(7, 11)
 			s.put(s.pick(spires), Vector3(q.x, g - 1.0, q.z), s.rng.randf() * TAU, Vector3(sc, s.rf(8, 18), sc))
-	# 原木、树桩、灌木
+
+
+static func _gd_logs(s: Scenery) -> void:
+	var P := s.placer
+	# 原木、树桩
 	var logs := [s.kind("nature/log_large", Scenery.MID), s.kind("nature/log", Scenery.MID), s.kind("nature/log_stack", Scenery.MID)]
 	s.scatter_kinds(logs, P.band(s.dn(45), 1, 38, 2.5), 6.0, 8.0, false, 0.1, Vector2(1, 1))
 	var stumps := [s.kind("nature/stump_old", Scenery.MID), s.kind("nature/stump_oldTall", Scenery.MID), s.kind("nature/stump_roundDetailed", Scenery.MID)]
 	s.scatter_kinds(stumps, P.band(s.dn(50), 1, 38, 1.5), 6.0, 8.5, false, 0.1)
+
+
+static func _gd_bushes(s: Scenery) -> void:
+	var P := s.placer
 	var bushes := [s.kind("nature/plant_bushDetailed", Scenery.MID_TINT), s.kind("nature/plant_bushLarge", Scenery.MID_TINT)]
 	s.scatter_kinds(bushes, P.band(s.dn(420), 0.5, 38, 1.6), 5.5, 8.5, true, 0.1)
+
+
+static func _gd_small(s: Scenery) -> void:
+	var P := s.placer
 	# 蘑菇：路边小簇 + 几朵童话般的巨型蘑菇
 	var shrooms := [s.kind("nature/mushroom_redGroup", Scenery.SMALL), s.kind("nature/mushroom_tanGroup", Scenery.SMALL), s.kind("nature/mushroom_red", Scenery.SMALL)]
 	s.scatter_kinds(shrooms, P.band(s.dn(160), 0.2, 30, 0.8, false, false), 6.0, 9.0, false, 0.02)

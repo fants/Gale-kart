@@ -14,6 +14,13 @@ var _flat_far := FastNoiseLite.new()
 var _near_cells := {}
 ## 每条支路 64 m 内的网格
 var _branch_cells: Array[Dictionary] = []
+## 地形网格缓存：地形网格算好后填入，之后 height_at 直接在网格三角形上插值（与渲染出来的地面完全一致，且快得多）
+var _grid := PackedFloat32Array()
+var _gx0 := 0.0
+var _gz0 := 0.0
+var _gcell := 1.0
+var _gw := 0
+var _gh := 0
 ## 立交：上下两层赛道交叉处的中心（xz）。附近的地形跟随下层路面，上层成桥
 var crossings: Array[Vector2] = []
 const CROSS_R := 70.0
@@ -119,7 +126,39 @@ func _base(x: float, z: float) -> float:
 	return rolling + mountains
 
 
+## 填入地形网格（heights 为 w×h，行优先，z 方向为行），与 TerrainMesh 的三角剖分一致
+func set_grid(heights: PackedFloat32Array, x0: float, z0: float, cell: float, w: int, h: int) -> void:
+	_grid = heights
+	_gx0 = x0
+	_gz0 = z0
+	_gcell = cell
+	_gw = w
+	_gh = h
+
+
 func height_at(x: float, z: float) -> float:
+	if not _grid.is_empty():
+		var fx := (x - _gx0) / _gcell
+		var fz := (z - _gz0) / _gcell
+		var ix := floori(fx)
+		var iz := floori(fz)
+		if ix >= 0 and iz >= 0 and ix < _gw - 1 and iz < _gh - 1:
+			fx -= ix
+			fz -= iz
+			var a := iz * _gw + ix
+			var ha := _grid[a]
+			var hb := _grid[a + 1]
+			var hc := _grid[a + _gw]
+			var hd := _grid[a + _gw + 1]
+			# 两个三角形：(a, b, c) 与 (b, d, c)
+			if fx + fz <= 1.0:
+				return ha + (hb - ha) * fx + (hc - ha) * fz
+			return hd + (hc - hd) * (1.0 - fx) + (hb - hd) * (1.0 - fz)
+	return height_exact(x, z)
+
+
+## 按地形函数精确计算（不走网格缓存）
+func height_exact(x: float, z: float) -> float:
 	if flat:
 		var far := MathX.smooth(80.0, 340.0, _outside(x, z))
 		return -0.3 + far * (4.0 + _flat_far.get_noise_2d(x / 70.0, z / 70.0) * 6.0)

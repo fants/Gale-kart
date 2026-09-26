@@ -5,13 +5,20 @@ extends RefCounted
 
 
 static func build(s: Scenery) -> void:
-	_start_gantry(s)
-	_grandstands(s)
-	_pits(s)
-	_corner_stands(s)
-	_straights(s)
-	_tire_stacks(s)
-	_trees(s)
+	for step in steps(s):
+		step.call()
+
+
+static func steps(s: Scenery) -> Array[Callable]:
+	return [
+		func() -> void: _start_gantry(s),
+		func() -> void: _grandstands(s),
+		func() -> void: _pits(s),
+		func() -> void: _corner_stands(s),
+		func() -> void: _straights(s),
+		func() -> void: _tire_stacks(s),
+		func() -> void: _trees(s),
+	]
 
 
 ## 模型 +Z 朝向赛道时的朝向角（side：物件在赛道哪一侧，+1 为法线方向）

@@ -9,7 +9,11 @@ var build_ms := 0
 
 
 func build(track: TrackData, terrain: TerrainData, cell: float) -> void:
-	name = "Terrain"
+	apply(track, terrain, compute(track, terrain, cell))
+
+
+## 纯计算（可以放在工作线程里跑）：高度网格、顶点 / 法线 / 颜色 / 索引数组
+static func compute(track: TrackData, terrain: TerrainData, cell: float) -> Dictionary:
 	var t0 := Time.get_ticks_msec()
 	var theme := track.theme
 	var b := terrain.bounds
@@ -25,7 +29,7 @@ func build(track: TrackData, terrain: TerrainData, cell: float) -> void:
 	for iz in h:
 		var z := z0 + iz * cell
 		for ix in w:
-			heights[iz * w + ix] = terrain.height_at(x0 + ix * cell, z)
+			heights[iz * w + ix] = terrain.height_exact(x0 + ix * cell, z)
 
 	var c_base := Color(theme["ground"]["base"])
 	var c_alt := Color(theme["ground"]["alt"])
@@ -78,6 +82,22 @@ func build(track: TrackData, terrain: TerrainData, cell: float) -> void:
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_COLOR] = colors
 	arrays[Mesh.ARRAY_INDEX] = indices
+	return {"arrays": arrays, "heights": heights, "x0": x0, "z0": z0, "cell": cell, "w": w, "h": h,
+		"nxs": nxs, "nzs": nzs, "c_far": c_far, "ms": Time.get_ticks_msec() - t0}
+
+
+## 主线程：建网格与节点，并把高度网格交给 TerrainData（之后查询高度走网格插值）
+func apply(track: TrackData, terrain: TerrainData, data: Dictionary) -> void:
+	name = "Terrain"
+	var t0 := Time.get_ticks_msec()
+	var theme := track.theme
+	var b := terrain.bounds
+	var arrays: Array = data["arrays"]
+	var nxs: int = data["nxs"]
+	var nzs: int = data["nzs"]
+	var cell: float = data["cell"]
+	var c_far: Color = data["c_far"]
+	terrain.set_grid(data["heights"], data["x0"], data["z0"], cell, data["w"], data["h"])
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
@@ -108,7 +128,7 @@ func build(track: TrackData, terrain: TerrainData, cell: float) -> void:
 	far.position = Vector3(cx, 2.0 if terrain.flat else 28.0, cz)
 	far.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(far)
-	build_ms = Time.get_ticks_msec() - t0
+	build_ms = int(data["ms"]) + Time.get_ticks_msec() - t0
 
 
 func _ring(r0: float, r1: float, seg: int) -> ArrayMesh:

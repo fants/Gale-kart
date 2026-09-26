@@ -28,23 +28,34 @@ var theme: Dictionary
 
 
 func build(p_track: TrackData, p_terrain: TerrainData) -> void:
+	for step in steps(p_track, p_terrain):
+		step.call()
+
+
+## 构建步骤（可以分帧执行）
+func steps(p_track: TrackData, p_terrain: TerrainData) -> Array[Callable]:
 	main = p_track
 	track = main
 	terrain = p_terrain
 	theme = track.theme
 	name = "TrackMesh"
-	_build_road()
-	_build_walls()
-	_build_grid_marks()
-	_build_pads()
-	_build_ramps()
-	_build_bridges()
-	_build_cliffs()
+	var out: Array[Callable] = [
+		func() -> void: _build_road(),
+		func() -> void: _build_walls(),
+		func() -> void:
+			_build_grid_marks()
+			_build_pads()
+			_build_ramps(),
+		func() -> void: _build_bridges(),
+		func() -> void: _build_cliffs(),
+	]
 	for b in main.branches:
-		track = b
-		_build_road()
-		_build_walls()
-	track = main
+		out.append(func() -> void:
+			track = b
+			_build_road()
+			_build_walls()
+			track = main)
+	return out
 
 
 # ———————————————— 工具 ————————————————

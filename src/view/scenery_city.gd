@@ -20,24 +20,37 @@ const UNDERPASS_MAX := 4
 
 
 static func build(s: Scenery) -> void:
-	s.placer.start_clear = 40.0
-	var win := ShaderMaterial.new()
-	win.shader = WINDOW_SHADER
-	win.set_shader_parameter("albedo_tex", COLORMAP)
-	var street := _street_row(s, win)
-	_blocks(s, win)
-	var mats := _neon_mats(s)
-	var parts: Array = []
-	_neon_signs(s, street, mats, parts)
-	_neon_pylons(s, mats, parts)
-	if not parts.is_empty():
-		var mi := MeshInstance3D.new()
-		mi.name = "NeonSigns"
-		mi.mesh = SceneryLib.merge(parts)
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		s.add_child(mi)
-	_lamps(s)
-	_underpass_lights(s)
+	for step in steps(s):
+		step.call()
+
+
+## 分帧构建用的步骤（顺序与一次做完相同）
+static func steps(s: Scenery) -> Array[Callable]:
+	var st := {}
+	return [
+		func() -> void:
+			s.placer.start_clear = 40.0
+			var win := ShaderMaterial.new()
+			win.shader = WINDOW_SHADER
+			win.set_shader_parameter("albedo_tex", COLORMAP)
+			st["win"] = win
+			st["street"] = _street_row(s, win),
+		func() -> void: _blocks(s, st["win"]),
+		func() -> void:
+			var mats := _neon_mats(s)
+			var parts: Array = []
+			_neon_signs(s, st["street"], mats, parts)
+			_neon_pylons(s, mats, parts)
+			if not parts.is_empty():
+				var mi := MeshInstance3D.new()
+				mi.name = "NeonSigns"
+				mi.mesh = SceneryLib.merge(parts)
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				s.add_child(mi),
+		func() -> void:
+			_lamps(s)
+			_underpass_lights(s),
+	]
 
 
 ## City Kit 模型换成夜景窗户材质，注册为批量类型

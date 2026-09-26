@@ -40,22 +40,49 @@ var record_result := {}
 var autopilot := false
 ## 无人值守时也提交成绩（调试：生成计时赛幽灵车）
 var record_even_autopilot := false
+## 构建完成前不跑比赛逻辑（start 是分帧的协程）
+var _built := false
+## 分帧构建：每段工作超过这么多微秒就让出一帧，让加载页动画保持流畅
+const BUILD_SLICE_US := 20000
+var _slice_t := 0
+var _progress := Callable()
 
 
 ## sel: {mode, track_id, character_id, kart_id, paint_id, difficulty, laps}
 ## opts: {quality, autopilot, skip_intro, seed, ai_roster, record}
-func start(p_sel: Dictionary, opts := {}) -> void:
+## 协程：赛道 / 地形数据和地形网格在工作线程里算，其余在主线程分帧构建；progress(0..1) 报告真实进度
+func start(p_sel: Dictionary, opts := {}, progress := Callable()) -> void:
 	sel = p_sel.duplicate()
 	quality = opts.get("quality", Store.settings.get("quality", "high"))
 	autopilot = opts.get("autopilot", false)
 	record_even_autopilot = opts.get("record", false)
 	name = "Race"
-	track = TrackData.build(TracksData.track_by_id(sel.get("track_id", "village")))
-	terrain = TerrainData.create(track)
+	_progress = progress
+	_slice_t = Time.get_ticks_usec()
+	var def := TracksData.track_by_id(sel.get("track_id", "village"))
+	var cell: float = EnvironmentFactory.quality_preset(quality)["terrain_cell"]
+	var job := {}
+	var task := WorkerThreadPool.add_task(func() -> void:
+		var tr := TrackData.build(def)
+		var td := TerrainData.create(tr)
+		job["track"] = tr
+		job["terrain"] = td
+		job["terrain_mesh"] = TerrainMesh.compute(tr, td, cell), false, "构建赛道数据")
+	var waited := 0.0
+	while not WorkerThreadPool.is_task_completed(task):
+		# 线程里的进度不可知：按经验时长缓慢推进到 45%
+		waited += get_process_delta_time()
+		_report(minf(0.45, 0.05 + waited * 0.3))
+		await get_tree().process_frame
+	WorkerThreadPool.wait_for_task_completion(task)
+	_slice_t = Time.get_ticks_usec()
+	track = job["track"]
+	terrain = job["terrain"]
+	_report(0.45)
 
 	world = RaceWorld.new()
 	add_child(world)
-	world.build(track, terrain, quality, sel.get("mode", "speed"))
+	await world.build_async(track, terrain, quality, job["terrain_mesh"], _breath, func(p: float) -> void: _report(0.45 + 0.4 * p))
 
 	race = RaceSim.new({
 		"track": track, "mode": sel.get("mode", "speed"), "laps": int(sel.get("laps", 3)),
@@ -69,6 +96,8 @@ func start(p_sel: Dictionary, opts := {}) -> void:
 
 	recorder = ReplayRecorder.new(race)
 	race.recorder = recorder
+	_report(0.88)
+	await _breath()
 
 	effects = Effects.new()
 	add_child(effects)
@@ -82,6 +111,7 @@ func start(p_sel: Dictionary, opts := {}) -> void:
 		add_child(v)
 		v.setup(k, {"show_name": not k.is_player, "night": track.theme.get("night", false), "engine_audio": not k.is_player})
 		kart_views.append(v)
+		await _breath()
 
 	camera = Camera3D.new()
 	camera.name = "Camera"
@@ -110,6 +140,20 @@ func start(p_sel: Dictionary, opts := {}) -> void:
 	EnvironmentFactory.apply_viewport_quality(get_viewport(), quality)
 	AudioMgr.play_music(track.def.get("music", "village"))
 	AudioMgr.set_music_tempo(1.0)
+	_report(1.0)
+	_built = true
+
+
+## 分帧：本段工作超过 BUILD_SLICE_US 就让出一帧
+func _breath() -> void:
+	if Time.get_ticks_usec() - _slice_t > BUILD_SLICE_US:
+		await get_tree().process_frame
+		_slice_t = Time.get_ticks_usec()
+
+
+func _report(p: float) -> void:
+	if _progress.is_valid():
+		_progress.call(p)
 
 
 func _exit_tree() -> void:
@@ -140,13 +184,13 @@ func set_paused(p: bool) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and race and not paused and race.phase != "finished" and not autopilot:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and _built and race and not paused and race.phase != "finished" and not autopilot:
 		# 切到后台自动暂停
 		request.emit("pause")
 
 
 func _process(dt: float) -> void:
-	if race == null or paused:
+	if not _built or race == null or paused:
 		return
 	dt = minf(dt, 0.1)
 	time += dt

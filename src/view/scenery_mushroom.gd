@@ -7,34 +7,57 @@ const CAPS := ["#E8413C", "#FF8A3D", "#B066E8", "#E8413C", "#F2C94C"]
 
 
 static func build(s: Scenery) -> void:
-	_trees(s)
-	_mushrooms(s)
-	_mushroom_houses(s)
-	SceneryForest._ground_detail(s)
-	_verges(s)
-	_cliff_edge(s)
-	add_fence_chevrons(s, Color("#FFC21A"), Color("#1A1A1A"))
+	for step in steps(s):
+		step.call()
+
+
+static func steps(s: Scenery) -> Array[Callable]:
+	var out: Array[Callable] = _tree_steps(s)
+	out.append_array([
+		func() -> void: _mushrooms(s),
+		func() -> void: _mushroom_houses(s),
+	])
+	out.append_array(SceneryForest.ground_detail_steps(s))
+	out.append_array([
+		func() -> void: _verges(s),
+		func() -> void: _cliff_edge(s),
+		func() -> void: add_fence_chevrons(s, Color("#FFC21A"), Color("#1A1A1A")),
+	])
+	return out
 
 
 static func _trees(s: Scenery) -> void:
+	for step in _tree_steps(s):
+		step.call()
+
+
+## 树林拆成几步：先分批找位置，最后统一摆放（随机数顺序与一次做完相同）
+static func _tree_steps(s: Scenery) -> Array[Callable]:
 	var P := s.placer
-	var broad := [
-		s.kind("nature/tree_oak", Scenery.BIG_TINT), s.kind("nature/tree_default", Scenery.BIG_TINT),
-		s.kind("nature/tree_detailed", Scenery.BIG_TINT), s.kind("nature/tree_fat", Scenery.BIG_TINT),
-		s.kind("nature/tree_plateau", Scenery.BIG_TINT), s.kind("nature/tree_oak_dark", Scenery.BIG_TINT),
+	var spots: Array[Vector4] = []
+	return [
+		func() -> void:
+			spots.append_array(P.band(s.dn(380), 6, 30, 2.8, true))
+			spots.append_array(P.band(s.dn(260), 30, 75, 2.8, true)),
+		func() -> void:
+			for g in P.scatter(s.dn(20), 26, 50, 300, true, false):
+				spots.append_array(P.cluster(Vector3(g.x, g.y, g.z), 22, 28.0, 2.8, true, true)),
+		func() -> void:
+			spots.append_array(P.scatter(s.dn(220), 2.8, 90, 420, true)),
+		func() -> void:
+			var broad := [
+				s.kind("nature/tree_oak", Scenery.BIG_TINT), s.kind("nature/tree_default", Scenery.BIG_TINT),
+				s.kind("nature/tree_detailed", Scenery.BIG_TINT), s.kind("nature/tree_fat", Scenery.BIG_TINT),
+				s.kind("nature/tree_plateau", Scenery.BIG_TINT), s.kind("nature/tree_oak_dark", Scenery.BIG_TINT),
+			]
+			var pines := [s.kind("nature/tree_pineRoundA", Scenery.BIG_TINT), s.kind("nature/tree_pineRoundC", Scenery.BIG_TINT), s.kind("nature/tree_pineTallB_detailed", Scenery.BIG_TINT)]
+			var fall := [s.kind("nature/tree_oak_fall", Scenery.BIG_TINT), s.kind("nature/tree_default_fall", Scenery.BIG_TINT)]
+			for p in spots:
+				var roll := s.rng.randf()
+				var k: String = s.pick(pines) if roll < 0.18 else (s.pick(fall) if roll < 0.26 else s.pick(broad))
+				var sc := s.rf(7.0, 10.5)
+				s.put(k, Vector3(p.x, p.y - 0.2, p.z), s.rng.randf() * TAU, Vector3(sc, sc * s.rf(0.95, 1.25), sc), s.tint(Color(1.0, 1.04, 0.92), 0.14)),
 	]
-	var pines := [s.kind("nature/tree_pineRoundA", Scenery.BIG_TINT), s.kind("nature/tree_pineRoundC", Scenery.BIG_TINT), s.kind("nature/tree_pineTallB_detailed", Scenery.BIG_TINT)]
-	var fall := [s.kind("nature/tree_oak_fall", Scenery.BIG_TINT), s.kind("nature/tree_default_fall", Scenery.BIG_TINT)]
-	var spots := P.band(s.dn(380), 6, 30, 2.8, true)
-	spots.append_array(P.band(s.dn(260), 30, 75, 2.8, true))
-	for g in P.scatter(s.dn(20), 26, 50, 300, true, false):
-		spots.append_array(P.cluster(Vector3(g.x, g.y, g.z), 22, 28.0, 2.8, true, true))
-	spots.append_array(P.scatter(s.dn(220), 2.8, 90, 420, true))
-	for p in spots:
-		var roll := s.rng.randf()
-		var k: String = s.pick(pines) if roll < 0.18 else (s.pick(fall) if roll < 0.26 else s.pick(broad))
-		var sc := s.rf(7.0, 10.5)
-		s.put(k, Vector3(p.x, p.y - 0.2, p.z), s.rng.randf() * TAU, Vector3(sc, sc * s.rf(0.95, 1.25), sc), s.tint(Color(1.0, 1.04, 0.92), 0.14))
 
 
 ## 单位蘑菇（高约 1.4）：菌柄 + 半球菌伞 + 白点

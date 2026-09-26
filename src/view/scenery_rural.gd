@@ -6,19 +6,30 @@ extends RefCounted
 # ———————————————— 阳光小镇 ————————————————
 
 static func build_village(s: Scenery) -> void:
-	var P := s.placer
-	var trees := [
-		s.kind("nature/tree_default", Scenery.BIG_TINT), s.kind("nature/tree_oak", Scenery.BIG_TINT),
-		s.kind("nature/tree_detailed", Scenery.BIG_TINT), s.kind("nature/tree_fat", Scenery.BIG_TINT),
-		s.kind("nature/tree_plateau", Scenery.BIG_TINT), s.kind("nature/tree_cone", Scenery.BIG_TINT),
-		s.kind("nature/tree_tall", Scenery.BIG_TINT),
-	]
-	var fall := [s.kind("nature/tree_default_fall", Scenery.BIG_TINT), s.kind("nature/tree_oak_fall", Scenery.BIG_TINT)]
+	for step in village_steps(s):
+		step.call()
 
+
+## 分帧构建用的步骤（与一次做完的顺序、随机数完全相同）
+static func village_steps(s: Scenery) -> Array[Callable]:
+	return [
+		func() -> void: _village_0(s),
+		func() -> void: _village_1(s),
+		func() -> void: _village_2(s),
+		func() -> void: _village_3(s),
+		func() -> void: _village_4(s),
+		func() -> void: _village_5(s),
+	]
+
+
+static func _village_0(s: Scenery) -> void:
 	# 看台（起点附近）与风车（一座在开场航拍的画面里）
 	_small_stand(s)
 	_windmills(s, 3)
 
+
+static func _village_1(s: Scenery) -> void:
+	var P := s.placer
 	# 红顶小屋村落：每处 2~3 栋，门口朝赛道，附近有围栏和干草垛
 	# 三种屋顶颜色各一种网格（颜色烘焙进顶点色，不用实例色，免得墙也被染色）
 	var houses: Array = []
@@ -37,10 +48,23 @@ static func build_village(s: Scenery) -> void:
 	for b in P.band(s.dn(24), 4, 40, 1.6):
 		s.put(hay, Vector3(b.x, b.y - 0.1, b.z), s.rng.randf() * TAU, Vector3.ONE * s.rf(0.85, 1.1), s.tint(Color("#F2C94C"), 0.15))
 
+
+static func _village_2(s: Scenery) -> void:
+	var P := s.placer
 	# 花田：几块成行的郁金香田，每行一种颜色
 	for f in P.band(s.dn(4), 7, 30, 13.0, false, true):
 		_flower_field(s, f)
 
+
+static func _village_3(s: Scenery) -> void:
+	var P := s.placer
+	var trees := [
+		s.kind("nature/tree_default", Scenery.BIG_TINT), s.kind("nature/tree_oak", Scenery.BIG_TINT),
+		s.kind("nature/tree_detailed", Scenery.BIG_TINT), s.kind("nature/tree_fat", Scenery.BIG_TINT),
+		s.kind("nature/tree_plateau", Scenery.BIG_TINT), s.kind("nature/tree_cone", Scenery.BIG_TINT),
+		s.kind("nature/tree_tall", Scenery.BIG_TINT),
+	]
+	var fall := [s.kind("nature/tree_default_fall", Scenery.BIG_TINT), s.kind("nature/tree_oak_fall", Scenery.BIG_TINT)]
 	# 树：路边一圈 + 成片树林 + 远处零散
 	var tree_spots := P.band(s.dn(260), 6, 30, 2.6, true)
 	tree_spots.append_array(P.band(s.dn(160), 30, 70, 2.6, true))
@@ -52,6 +76,9 @@ static func build_village(s: Scenery) -> void:
 		var sc := s.rf(6.0, 9.0)
 		s.put(k, Vector3(p.x, p.y - 0.15, p.z), s.rng.randf() * TAU, Vector3(sc, sc * s.rf(0.9, 1.2), sc), s.tint())
 
+
+static func _village_4(s: Scenery) -> void:
+	var P := s.placer
 	# 灌木、花丛、草丛、石头
 	var bushes := [s.kind("nature/plant_bushDetailed", Scenery.MID_TINT), s.kind("nature/plant_bushLarge", Scenery.MID_TINT), s.kind("nature/plant_bush", Scenery.MID_TINT)]
 	s.scatter_kinds(bushes, P.band(s.dn(380), 0.5, 36, 1.6), 5.0, 8.0, true, 0.1)
@@ -65,6 +92,8 @@ static func build_village(s: Scenery) -> void:
 	var rocks := [s.kind("nature/rock_largeB", Scenery.MID), s.kind("nature/rock_largeD", Scenery.MID), s.kind("nature/rock_tallE", Scenery.MID)]
 	s.scatter_kinds(rocks, P.band(s.dn(80), 1, 40, 2.0), 3.0, 5.5, false, 0.3)
 
+
+static func _village_5(s: Scenery) -> void:
 	# 热气球
 	var palettes: Array = [[Color("#FF5A5F"), Color("#FFD23F")], [Color("#3EC6FF"), Color("#FFFFFF")], [Color("#A06BFF"), Color("#FF8AD8")]]
 	var b := s.track.bounds
@@ -168,9 +197,30 @@ static func _flower_field(s: Scenery, f: Vector4) -> void:
 # ———————————————— 黄金沙漠 ————————————————
 
 static func build_desert(s: Scenery) -> void:
-	var P := s.placer
+	for step in desert_steps(s):
+		step.call()
+
+
+## 分帧构建用的步骤（与一次做完的顺序、随机数完全相同）
+static func desert_steps(s: Scenery) -> Array[Callable]:
+	return [
+		func() -> void: _desert_0(s),
+		func() -> void: _desert_1(s),
+		func() -> void: _desert_2(s),
+		func() -> void: _desert_3(s),
+		func() -> void: _desert_4(s),
+		func() -> void: _desert_5(s),
+		func() -> void: _desert_6(s),
+		func() -> void: _desert_7(s),
+	]
+
+
+static func _desert_0(s: Scenery) -> void:
 	_pyramids(s)
 
+
+static func _desert_1(s: Scenery) -> void:
+	var P := s.placer
 	# 方尖碑：成对立在路边
 	var obelisk := s.kind("nature/statue_obelisk", Scenery.BIG)
 	for o in P.band(s.dn(8), 5, 26, 2.5, true):
@@ -181,6 +231,9 @@ static func build_desert(s: Scenery) -> void:
 			if P.ok(q.x, q.z, 1.5, true, false):
 				s.put(obelisk, Vector3(q.x, P.ground(q.x, q.z, 1.5) - 0.2, q.z), P.facing(q.x, q.z), Vector3(14, 15, 14))
 
+
+static func _desert_2(s: Scenery) -> void:
+	var P := s.placer
 	# 石柱遗迹
 	var cols := [s.kind("nature/statue_column", Scenery.BIG), s.kind("nature/statue_columnDamaged", Scenery.BIG)]
 	var block := s.kind("nature/statue_block", Scenery.MID)
@@ -196,12 +249,18 @@ static func build_desert(s: Scenery) -> void:
 			if P.ok(q.x, q.z, 1.5, false, false):
 				s.put(block, Vector3(q.x, P.ground(q.x, q.z) - 0.3, q.z), s.rng.randf() * TAU, Vector3.ONE * s.rf(5, 7))
 
+
+static func _desert_3(s: Scenery) -> void:
+	var P := s.placer
 	# 仙人掌
 	var cactus := [s.kind("nature/cactus_tall", Scenery.BIG_TINT), s.kind("nature/cactus_short", Scenery.BIG_TINT)]
 	var cs := P.band(s.dn(150), 2, 32, 1.4)
 	cs.append_array(P.scatter(s.dn(110), 1.4, 45, 320))
 	s.scatter_kinds(cactus, cs, 5.0, 7.5, true, 0.1)
 
+
+static func _desert_4(s: Scenery) -> void:
+	var P := s.placer
 	# 绿洲：水塘 + 一圈棕榈 + 灌木
 	var palms := [s.kind("nature/tree_palmTall", Scenery.BIG_TINT), s.kind("nature/tree_palm", Scenery.BIG_TINT), s.kind("nature/tree_palmBend", Scenery.BIG_TINT), s.kind("nature/tree_palmDetailedTall", Scenery.BIG_TINT)]
 	var bush := s.kind("nature/plant_bushLarge", Scenery.MID_TINT)
@@ -228,6 +287,9 @@ static func build_desert(s: Scenery) -> void:
 			s.put(bush, Vector3(qb.x, s.terrain.height_at(qb.x, qb.z) - 0.1, qb.z), s.rng.randf() * TAU, Vector3.ONE * s.rf(5, 7), s.tint(Color(0.9, 1.0, 0.8)))
 	s.scatter_kinds(palms, P.band(s.dn(40), 6, 36, 2.5, true), 6.0, 8.0, true, 0.15)
 
+
+static func _desert_5(s: Scenery) -> void:
+	var P := s.placer
 	# 岩石与远处台地
 	var rocks := [s.kind("nature/stone_tallA", Scenery.MID), s.kind("nature/stone_tallC", Scenery.MID), s.kind("nature/stone_tallG", Scenery.MID),
 		s.kind("nature/stone_largeB", Scenery.MID), s.kind("nature/stone_largeD", Scenery.MID)]
@@ -239,6 +301,9 @@ static func build_desert(s: Scenery) -> void:
 		var sc := s.rf(26, 40)
 		s.put(s.pick(big_mesa), Vector3(m.x, m.y - 3.0, m.z), s.rng.randf() * TAU, Vector3(sc, sc * s.rf(0.7, 1.1), sc))
 
+
+static func _desert_6(s: Scenery) -> void:
+	var P := s.placer
 	# 驼色帐篷营地
 	var tents := [s.kind("nature/tent_detailedOpen", Scenery.BIG), s.kind("nature/tent_detailedClosed", Scenery.BIG), s.kind("nature/tent_smallOpen", Scenery.BIG)]
 	var fire := s.kind("nature/campfire_stones", Scenery.SMALL)
@@ -249,6 +314,9 @@ static func build_desert(s: Scenery) -> void:
 		s.put(fire, Vector3(c.x, c.y - 0.05, c.z), s.rng.randf() * TAU, Vector3.ONE * 5.0)
 		s.put(logs, Vector3(c.x, c.y, c.z), s.rng.randf() * TAU, Vector3.ONE * 5.0)
 
+
+static func _desert_7(s: Scenery) -> void:
+	var P := s.placer
 	# 枯草、小灌木
 	var dry := [s.kind("nature/plant_bushSmall", Scenery.SMALL_TINT), s.kind("nature/grass_leafsLarge", Scenery.SMALL_TINT)]
 	for p in P.band(s.dn(160), 0, 36, 1.0, false, false):
@@ -347,12 +415,24 @@ static func _min_height(s: Scenery, p: Vector4, r: float) -> float:
 # ———————————————— 冰雪乐园 ————————————————
 
 static func build_snow(s: Scenery) -> void:
-	var P := s.placer
-	var pines := [
-		s.kind("nature/tree_pineTallA_detailed", Scenery.BIG_TINT), s.kind("nature/tree_pineTallB_detailed", Scenery.BIG_TINT),
-		s.kind("nature/tree_pineTallC_detailed", Scenery.BIG_TINT), s.kind("nature/tree_pineTallD_detailed", Scenery.BIG_TINT),
-		s.kind("nature/tree_pineRoundA", Scenery.BIG_TINT), s.kind("nature/tree_pineDefaultA", Scenery.BIG_TINT),
+	for step in snow_steps(s):
+		step.call()
+
+
+## 分帧构建用的步骤（与一次做完的顺序、随机数完全相同）
+static func snow_steps(s: Scenery) -> Array[Callable]:
+	return [
+		func() -> void: _snow_0(s),
+		func() -> void: _snow_1(s),
+		func() -> void: _snow_2(s),
+		func() -> void: _snow_3(s),
+		func() -> void: _snow_4(s),
+		func() -> void: _snow_5(s),
 	]
+
+
+static func _snow_0(s: Scenery) -> void:
+	var P := s.placer
 	# 木屋（屋顶积雪）
 	var cabins: Array = []
 	for rc: String in ["#E8414B", "#3E8BFF"]:
@@ -360,14 +440,26 @@ static func build_snow(s: Scenery) -> void:
 	for c in P.band(s.dn(4), 12, 46, 14.0, true, false):
 		for h in P.cluster(Vector3(c.x, c.y, c.z), 2, 12.0, 5.5, true, true):
 			s.put(s.pick(cabins), Vector3(h.x, h.y - 0.3, h.z), P.facing(h.x, h.z) + s.rf(-0.3, 0.3), Vector3.ONE * s.rf(0.9, 1.1))
+
+
+static func _snow_1(s: Scenery) -> void:
+	var P := s.placer
 	# 冰屋
 	var igloo := s.kind_mesh("igloo", SceneryProps.igloo_mesh(), Scenery.BIG)
 	for p in P.band(s.dn(6), 5, 40, 4.5, true):
 		s.put(igloo, Vector3(p.x, p.y - 0.2, p.z), P.facing(p.x, p.z) + s.rf(-0.5, 0.5), Vector3.ONE * s.rf(0.9, 1.2))
+
+
+static func _snow_2(s: Scenery) -> void:
+	var P := s.placer
 	# 雪人（面朝赛道）
 	var snowman := s.kind_mesh("snowman", SceneryProps.snowman_mesh(), Scenery.BIG)
 	for p in P.band(s.dn(10), 3, 30, 1.8):
 		s.put(snowman, Vector3(p.x, p.y - 0.15, p.z), P.facing(p.x, p.z) + s.rf(-0.4, 0.4), Vector3.ONE * s.rf(0.9, 1.25))
+
+
+static func _snow_3(s: Scenery) -> void:
+	var P := s.placer
 	# 冰晶簇
 	var crystals: Array = []
 	for i in 3:
@@ -378,6 +470,15 @@ static func build_snow(s: Scenery) -> void:
 	for p in cspots:
 		var sc := s.rf(0.8, 1.5)
 		s.put(s.pick(crystals), Vector3(p.x, p.y - 0.2, p.z), s.rng.randf() * TAU, Vector3(sc, sc * s.rf(0.9, 1.3), sc))
+
+
+static func _snow_4(s: Scenery) -> void:
+	var P := s.placer
+	var pines := [
+		s.kind("nature/tree_pineTallA_detailed", Scenery.BIG_TINT), s.kind("nature/tree_pineTallB_detailed", Scenery.BIG_TINT),
+		s.kind("nature/tree_pineTallC_detailed", Scenery.BIG_TINT), s.kind("nature/tree_pineTallD_detailed", Scenery.BIG_TINT),
+		s.kind("nature/tree_pineRoundA", Scenery.BIG_TINT), s.kind("nature/tree_pineDefaultA", Scenery.BIG_TINT),
+	]
 	# 松树：路边 + 成片松林 + 远处
 	var tree_spots := P.band(s.dn(260), 6, 30, 2.4, true)
 	tree_spots.append_array(P.band(s.dn(160), 30, 70, 2.4, true))
@@ -385,6 +486,10 @@ static func build_snow(s: Scenery) -> void:
 		tree_spots.append_array(P.cluster(Vector3(g.x, g.y, g.z), 20, 26.0, 2.4, true, true))
 	tree_spots.append_array(P.scatter(s.dn(150), 2.4, 90, 400, true))
 	s.scatter_kinds(pines, tree_spots, 5.5, 8.5, true, 0.2, Vector2(0.9, 1.25))
+
+
+static func _snow_5(s: Scenery) -> void:
+	var P := s.placer
 	# 小松树、石头
 	var small := [s.kind("nature/tree_pineSmallA", Scenery.MID_TINT), s.kind("nature/tree_pineSmallC", Scenery.MID_TINT), s.kind("nature/tree_pineGroundA", Scenery.MID_TINT)]
 	s.scatter_kinds(small, P.band(s.dn(90), 1, 36, 1.5), 4.0, 6.0, true, 0.1)

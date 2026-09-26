@@ -148,7 +148,8 @@ func start_race(sel: Dictionary, opts := {}) -> void:
 	await get_tree().process_frame
 	var ctl := RaceController.new()
 	main.add_child(ctl)
-	ctl.start(sel, opts)
+	# 分帧构建（赛道 / 地形数据在工作线程里算），加载页动画不卡；进度条显示真实进度
+	await ctl.start(sel, opts, loading.set_progress)
 	ctl.race_finished.connect(_on_race_finished)
 	ctl.request.connect(_on_race_request)
 	current = ctl

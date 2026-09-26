@@ -43,11 +43,25 @@ var neon_mats: Array[StandardMaterial3D] = []
 var neon_base: Array[float] = []
 
 var _aabbs := {}
+var _t0 := 0
 
 
 func build(p_track: TrackData, p_terrain: TerrainData, p_quality: String, seed := 3) -> void:
+	for step in prepare(p_track, p_terrain, p_quality, seed):
+		step.call()
+
+
+## 分帧构建：每步之间调用 breath（由调用方决定要不要让出一帧）
+func build_async(p_track: TrackData, p_terrain: TerrainData, p_quality: String, breath: Callable, seed := 3) -> void:
+	for step in prepare(p_track, p_terrain, p_quality, seed):
+		step.call()
+		await breath.call()
+
+
+## 初始化并返回构建步骤（按顺序执行）
+func prepare(p_track: TrackData, p_terrain: TerrainData, p_quality: String, seed := 3) -> Array[Callable]:
 	name = "Scenery"
-	var t0 := Time.get_ticks_usec()
+	_t0 = Time.get_ticks_usec()
 	track = p_track
 	terrain = p_terrain
 	theme = track.theme
@@ -63,34 +77,38 @@ func build(p_track: TrackData, p_terrain: TerrainData, p_quality: String, seed :
 	batch = SceneryBatch.new(self)
 
 	# 广告牌先占位，再铺主题布景
-	SceneryAds.build(self)
+	var steps: Array[Callable] = [func() -> void: SceneryAds.build(self)]
 	match variant:
 		"town":
-			SceneryTown.build(self)
+			steps.append_array(SceneryTown.steps(self))
 		"mushroom":
-			SceneryMushroom.build(self)
+			steps.append_array(SceneryMushroom.steps(self))
 		"village":
-			SceneryRural.build_village(self)
+			steps.append_array(SceneryRural.village_steps(self))
 		"desert":
-			SceneryRural.build_desert(self)
+			steps.append_array(SceneryRural.desert_steps(self))
 		"snow":
-			SceneryRural.build_snow(self)
+			steps.append_array(SceneryRural.snow_steps(self))
 		"forest":
-			SceneryForest.build(self)
+			steps.append_array(SceneryForest.steps(self))
 		"circuit":
-			SceneryCircuit.build(self)
+			steps.append_array(SceneryCircuit.steps(self))
 		"city":
-			SceneryCity.build(self)
+			steps.append_array(SceneryCity.steps(self))
+	steps.append(_finish)
+	return steps
+
+
+func _finish() -> void:
 	if theme_id != "circuit":
 		_build_start_arch()
 	batch.commit()
-
 	weather = SceneryWeather.create(theme.get("weather", "none"), particles_k)
 	if weather:
 		add_child(weather.node)
 	stats["instances"] = batch.instance_count
 	stats["multimeshes"] = batch.multimesh_count
-	stats["build_ms"] = (Time.get_ticks_usec() - t0) / 1000.0
+	stats["build_ms"] = (Time.get_ticks_usec() - _t0) / 1000.0
 
 
 func update_view(dt: float, time: float, cam: Camera3D) -> void:

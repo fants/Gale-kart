@@ -11,13 +11,20 @@ const CITY_FAR := ["building-e", "building-j", "building-k", "building-n", "buil
 
 
 static func build(s: Scenery) -> void:
-	_townhouses(s)
-	_clock_tower(s)
-	_fountains(s)
-	_city_blocks(s)
-	_street_props(s)
-	_greenery(s)
-	SceneryMushroom.add_hairpin_signs(s, Color("#FF4D5E"), Color("#F7FAFF"))
+	for step in steps(s):
+		step.call()
+
+
+static func steps(s: Scenery) -> Array[Callable]:
+	return [
+		func() -> void: _townhouses(s),
+		func() -> void: _clock_tower(s),
+		func() -> void: _fountains(s),
+		func() -> void: _city_blocks(s),
+		func() -> void: _street_props(s),
+		func() -> void: _greenery(s),
+		func() -> void: SceneryMushroom.add_hairpin_signs(s, Color("#FF4D5E"), Color("#F7FAFF")),
+	]
 
 
 ## 联排小楼：墙身 + 坡屋顶 + 窗格 + 门 + 底层条纹遮阳篷。门面朝 +Z

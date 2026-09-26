@@ -226,6 +226,25 @@ static func themed_mat(theme_id: String, color: Color, snow := 1.0, tint := fals
 ## 把若干 [Mesh, Transform3D, Material(, 表面序号)] 合并成一个 ArrayMesh（同材质一个表面）；
 ## Material 为 null 时沿用各表面自己的材质；给了表面序号则只取该表面；烘焙色材质换成共享的顶点色材质。
 ## 直接拼接数组（比 SurfaceTool.append_from 快一个数量级）
+## 基础网格的形状签名：类名 + 所有存储属性（材质除外）
+static var _prim_props := {}
+
+
+static func primitive_key(m: PrimitiveMesh, sidx: int) -> String:
+	var cls := m.get_class()
+	if not _prim_props.has(cls):
+		var names: Array[String] = []
+		for pr in m.get_property_list():
+			var nm: String = pr["name"]
+			if int(pr["usage"]) & PROPERTY_USAGE_STORAGE and nm != "material" and not nm.begins_with("resource_") and nm != "script":
+				names.append(nm)
+		_prim_props[cls] = names
+	var key := "%s#%d" % [cls, sidx]
+	for nm: String in _prim_props[cls]:
+		key += "|" + str(m.get(nm))
+	return key
+
+
 static func merge(parts: Array) -> ArrayMesh:
 	var groups := {}
 	var order: Array[Material] = []
@@ -245,10 +264,14 @@ static func merge(parts: Array) -> ArrayMesh:
 				groups[mat] = {"v": [], "n": [], "uv": [], "i": [], "c": [], "count": 0, "baked": baked}
 				order.append(mat)
 			var g: Dictionary = groups[mat]
-			# 基础网格（盒子、圆柱等）每次都是新建的，直接取；模型网格取一次后缓存
+			# 基础网格（盒子、圆柱等）按形状参数缓存顶点数组：surface_get_arrays 会先把网格传到 GPU，
+			# 同样尺寸的盒子成百上千个时非常慢；模型网格按实例缓存
 			var arr: Array
 			if mesh is PrimitiveMesh:
-				arr = mesh.surface_get_arrays(sidx)
+				var pkey := primitive_key(mesh as PrimitiveMesh, sidx)
+				if not _arrays_cache.has(pkey):
+					_arrays_cache[pkey] = mesh.surface_get_arrays(sidx)
+				arr = _arrays_cache[pkey]
 			else:
 				var akey := Vector2i(mesh.get_instance_id(), sidx)
 				if not _arrays_cache.has(akey):
