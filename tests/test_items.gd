@@ -151,8 +151,12 @@ func _test_effects(t: TestUtil) -> void:
 	o = race.karts[1]
 	p.items.assign(["water"])
 	race.items.use(p)
-	_steps(race, 0.9)
+	var throw_s := p.s
+	_steps(race, ItemSystem.WATER_FLIGHT + 0.15)
 	t.check(race.items.water_zones.size() == 1, "水炸弹落地形成水柱")
+	var zs: float = race.items.water_zones[0]["s"]
+	var w_ahead := fposmod(zs - throw_s, race.track.n) * race.track.spacing
+	t.check(absf(w_ahead - ItemSystem.WATER_RANGE) < 3.0, "水炸弹落在丢出点前方 %.0f m" % w_ahead)
 	var zp: Vector3 = race.items.water_zones[0]["pos"]
 	p.x = zp.x; p.z = zp.z
 	o.x = zp.x + 1.0; o.z = zp.z

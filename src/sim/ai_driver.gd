@@ -280,7 +280,7 @@ func decide_item(dt: float, race: RaceSim) -> void:
 		"missile":
 			use = gap_ahead > 6.0 and gap_ahead < 140.0
 		"water":
-			use = (gap_ahead > 4.0 and gap_ahead < 55.0) or hold_time > 9.0
+			use = (gap_ahead > 40.0 and gap_ahead < 140.0) or hold_time > 9.0
 		"banana":
 			use = gap_behind < 22.0 or hold_time > 10.0
 		"shield":

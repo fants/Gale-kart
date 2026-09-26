@@ -6,7 +6,10 @@ extends RefCounted
 const BOX_RESPAWN := 2.6
 const MISSILE_SPEED := 64.0
 const WATER_FLY_SPEED := 70.0
-const WATER_FLIGHT := 0.75
+## 水炸弹：抛到前方 WATER_RANGE 米（沿赛道），飞行 WATER_FLIGHT 秒；满速时落在自己前方约 55 m
+const WATER_FLIGHT := 1.1
+const WATER_RANGE := 90.0
+const WATER_ARC := 13.0
 const ROLL_TIME := 0.65
 
 var race: RaceSim
@@ -90,7 +93,7 @@ func update(dt: float) -> void:
 		var sp: Vector3 = w["start"]
 		var ep: Vector3 = w["end"]
 		var pos := sp.lerp(ep, u)
-		pos.y += sin(u * PI) * 6.0
+		pos.y += sin(u * PI) * WATER_ARC
 		w["pos"] = pos
 		if u >= 1.0:
 			water_bombs.remove_at(i)
@@ -237,7 +240,7 @@ func use(k: KartSim) -> void:
 			events.append({"type": "water_fly_launch", "kart": k, "target": target, "fly": fly})
 		"water":
 			var road := _road(k)
-			var rs := road.wrap_s(_road_s(k) + 30.0 / road.spacing)
+			var rs := road.wrap_s(_road_s(k) + WATER_RANGE / road.spacing)
 			var el := clampf(k.lateral, -road.hw_at(rs) + 3.0, road.hw_at(rs) - 3.0)
 			var e := road.point_at(rs, el)
 			var es := rs if road == track else road.map_to_main(rs, track.n)
