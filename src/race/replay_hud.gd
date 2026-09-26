@@ -20,7 +20,7 @@ var _num_font: Font
 func setup(track_name: String) -> void:
 	name = "ReplayHud"
 	layer = 6
-	_num_font = load("res://assets/fonts/Bungee-Regular.ttf")
+	_num_font = load("res://assets/fonts/Bungee-Tabular.ttf")  # 等宽数字：跑秒 / 速度不抖
 	root = Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE

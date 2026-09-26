@@ -14,7 +14,7 @@ var _font: Font
 
 
 func _ready() -> void:
-	_font = load("res://assets/fonts/Bungee-Regular.ttf")
+	_font = load("res://assets/fonts/Bungee-Tabular.ttf")  # 等宽数字：跑秒 / 速度不抖
 	custom_minimum_size = Vector2(230, 230)
 
 

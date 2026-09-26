@@ -60,7 +60,7 @@ func setup(p_race: RaceSim) -> void:
 	name = "Hud"
 	layer = 5
 	race = p_race
-	_num_font = load("res://assets/fonts/Bungee-Regular.ttf")
+	_num_font = load("res://assets/fonts/Bungee-Tabular.ttf")  # 等宽数字：跑秒 / 速度不抖
 	_cn_font = load("res://assets/fonts/ZCOOLKuaiLe-Regular.ttf")
 	root = Control.new()
 	root.name = "Root"
