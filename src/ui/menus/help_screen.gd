@@ -97,7 +97,7 @@ func build() -> void:
 	var hints := Widgets.hint_bar([["←|→", "", "切换"], ["Q|E", "LB", "切换"], ["Esc", "B", "返回"]])
 	hints.size_flags_horizontal = Control.SIZE_SHRINK_END
 	v.add_child(hints)
-	_set_tab(0)
+	_set_tab(clampi(int(params.get("tab", 0)), 0, _pages.size() - 1))
 
 
 func _set_tab(i: int) -> void:
@@ -235,7 +235,7 @@ func _build_items() -> Control:
 		var h := HBoxContainer.new()
 		h.add_theme_constant_override("separation", 18)
 		p.add_child(h)
-		h.add_child(_item_icon(it))
+		h.add_child(_item_icon(id))
 		var tv := VBoxContainer.new()
 		tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tv.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -247,22 +247,17 @@ func _build_items() -> Control:
 	return grid
 
 
-## 道具图标：道具色圆角方块 + 字形
-func _item_icon(it: Dictionary) -> Control:
+## 道具图标：道具色深底圆角方块 + 图标
+func _item_icon(id: String) -> Control:
 	var c := Control.new()
-	c.custom_minimum_size = Vector2(80, 80)
+	c.custom_minimum_size = Vector2(88, 88)
 	c.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var col := Color(str(it["color"]))
-	var glyph := str(it["glyph"])
+	var col := Color(str(ItemsData.ITEMS[id]["color"]))
+	var tex := ItemsData.icon(id)
 	c.draw.connect(func() -> void:
 		var r := Rect2(Vector2(2, 2), c.size - Vector2(4, 8))
-		c.draw_style_box(UiTheme.box(col, 18, 3, UiTheme.INK, 4), r)
-		var f := UiTheme.font_cn()
-		var fs := 40 if glyph.length() <= 1 else 26
-		var w := f.get_string_size(glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-		var pos := r.get_center() + Vector2(-w / 2.0, fs * 0.36)
-		c.draw_string_outline(f, pos, glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 8, UiTheme.INK)
-		c.draw_string(f, pos, glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, UiTheme.WHITE))
+		c.draw_style_box(UiTheme.box(col.darkened(0.55), 18, 3, col.lightened(0.1), 4), r)
+		c.draw_texture_rect(tex, r.grow(-6), false))
 	return c
 
 

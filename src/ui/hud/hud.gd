@@ -30,7 +30,7 @@ var _gauge_panel: Control
 var _gauge_fill: ColorRect
 var _gauge_glow: ColorRect
 var _slots: Array[Panel] = []
-var _slot_labels: Array[Label] = []
+var _slot_icons: Array[TextureRect] = []
 var _big: Label
 var _sub: Label
 var _cue: Label
@@ -262,13 +262,18 @@ func _build_gauge() -> void:
 		var sb := _panel_style(Color(INK, 0.7), 22, 3)
 		slot.add_theme_stylebox_override("panel", sb)
 		_gauge_panel.add_child(slot)
-		var lb := _label("", 40 if big else 30, WHITE, false, 7)
-		lb.set_anchors_preset(Control.PRESET_FULL_RECT)
-		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lb.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		slot.add_child(lb)
+		var ic := TextureRect.new()
+		ic.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ic.offset_left = 7
+		ic.offset_top = 5
+		ic.offset_right = -7
+		ic.offset_bottom = -9
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.add_child(ic)
 		_slots.append(slot)
-		_slot_labels.append(lb)
+		_slot_icons.append(ic)
 	if race.item_mode:
 		return
 	# 集气条
@@ -449,23 +454,23 @@ func _update_slots(dt: float, p: KartSim) -> void:
 	if race.item_mode:
 		_roll_t += dt
 		for i in 2:
-			var lb := _slot_labels[i]
+			var ic := _slot_icons[i]
 			var sb := _slots[i].get_theme_stylebox("panel") as StyleBoxFlat
 			if p.item_roll > 0.0 and i == p.items.size() - 1:
 				# 轮盘：快速切换图标
 				var keys := ItemsData.ITEMS.keys()
 				var k: String = keys[int(_roll_t * 14.0) % keys.size()]
-				lb.text = ItemsData.ITEMS[k]["glyph"]
-				sb.bg_color = Color(ItemsData.ITEMS[k]["color"]).darkened(0.3)
+				_show_item(ic, sb, k, 0.75)
 			elif i < p.items.size():
-				var it: Dictionary = ItemsData.ITEMS[p.items[i]]
-				lb.text = it["glyph"]
-				sb.bg_color = Color(it["color"])
+				_show_item(ic, sb, p.items[i], 1.0)
+				# 被飞碟罩住：道具用不了，图标变灰
 				if p.ufo > 0.0:
+					ic.modulate = Color(0.35, 0.35, 0.4)
 					sb.bg_color = sb.bg_color.darkened(0.6)
 			else:
-				lb.text = ""
+				ic.texture = null
 				sb.bg_color = Color(INK, 0.7)
+				sb.border_color = INK
 		return
 	# 竞速赛：集气条 + 氮气罐
 	var g := clampf(p.gauge, 0.0, 1.0)
@@ -475,9 +480,20 @@ func _update_slots(dt: float, p: KartSim) -> void:
 	for i in 2:
 		var sb := _slots[i].get_theme_stylebox("panel") as StyleBoxFlat
 		var has := i < p.nitros
-		_slot_labels[i].text = "N₂O" if has else ""
-		_slot_labels[i].add_theme_font_size_override("font_size", 30)
-		sb.bg_color = BLUE if has else Color(INK, 0.6)
+		# 空槽显示淡淡的氮气罐轮廓
+		_slot_icons[i].texture = ItemsData.icon("nitro")
+		_slot_icons[i].modulate = Color.WHITE if has else Color(0.55, 0.6, 0.8, 0.22)
+		sb.bg_color = Color(BLUE).darkened(0.45) if has else Color(INK, 0.6)
+		sb.border_color = BLUE if has else INK
+
+
+## 道具槽：图标 + 道具色的深色底和亮色描边
+func _show_item(ic: TextureRect, sb: StyleBoxFlat, id: String, bright: float) -> void:
+	var col := Color(ItemsData.ITEMS[id]["color"])
+	ic.texture = ItemsData.icon(id)
+	ic.modulate = Color(bright, bright, bright)
+	sb.bg_color = col.darkened(0.55)
+	sb.border_color = col.lightened(0.1)
 
 
 ## 中央大字；opts: {hold: bool, cn: bool, color: Color}

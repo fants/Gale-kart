@@ -487,6 +487,8 @@ func _boot_demo(which: String) -> void:
 			loading.setup(sel2, {})
 		"setup":
 			goto_menu("setup", {"kind": str(args.get("kind", "quick")), "tab": int(args.get("tab", "0"))})
+		"help":
+			goto_menu("help", {"tab": int(args.get("tab", "0"))})
 		_:
 			goto_menu(which)
 

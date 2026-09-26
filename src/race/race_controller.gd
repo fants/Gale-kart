@@ -173,6 +173,8 @@ func _process(dt: float) -> void:
 	race.update(dt, inp)
 	if race.phase == "racing" and Game.args.has("warp") and not _warped:
 		_debug_warp()
+	if race.phase == "racing" and Game.args.has("give"):
+		_debug_give()
 	if not results_sent:
 		recorder.capture_events(race.events, race.clock)
 	router.handle(race.events)
@@ -225,6 +227,22 @@ func _debug_warp() -> void:
 				k.ai.route = bi
 				k.ai._decided = bi
 	rig.snap_behind(k)
+
+
+## 调试 / 截图：--give=missile,shield 让玩家一直拿着这些道具（竞速赛里 --give=nitro 给满两罐氮气），--roll 第二格一直在转轮盘
+func _debug_give() -> void:
+	var k := race.player
+	var ids := str(Game.args["give"]).split(",")
+	if race.item_mode:
+		k.items.clear()
+		for id in ids:
+			if ItemsData.ITEMS.has(id) and k.items.size() < 2:
+				k.items.append(id)
+		k.item_roll = 1.0 if Game.args.has("roll") else 0.0
+		if k.ai != null:
+			k.ai.item_delay = 999.0
+	elif "nitro" in ids:
+		k.nitros = 2
 
 
 func _update_views(dt: float) -> void:
