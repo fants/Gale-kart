@@ -682,11 +682,16 @@ func _exit_tree() -> void:
 		get_tree().call_group("garage_stage", "drag_end")
 
 
+## 车库人物往下挪的距离（界面按 1920×1080 布局；默认 1600×900 窗口里正好 50 像素）
+const PREVIEW_DROP := 60.0
+
+
 func view_rect() -> Rect2:
 	if _preview == null or _preview.size.x < 10.0:
-		return Rect2(0.64, 0.06, 0.33, 0.42)
+		return Rect2(0.64, 0.06 + PREVIEW_DROP / 1080.0, 0.33, 0.42)
 	var vp := get_viewport_rect().size
 	var r := _preview.get_global_rect()
 	r.position.x -= position.x
+	r.position.y += PREVIEW_DROP
 	return Rect2(r.position / vp, r.size / vp)
 
