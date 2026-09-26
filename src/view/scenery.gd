@@ -16,6 +16,8 @@ var track: TrackData
 var terrain: TerrainData
 var theme: Dictionary
 var theme_id := ""
+## 主题自己的 id（派生主题与 theme_id 不同）
+var variant := ""
 var quality := "high"
 ## 密度系数（画质预设 scenery：0.4 / 0.7 / 1.0）
 var density := 1.0
@@ -49,7 +51,9 @@ func build(p_track: TrackData, p_terrain: TerrainData, p_quality: String, seed :
 	track = p_track
 	terrain = p_terrain
 	theme = track.theme
-	theme_id = theme["id"]
+	# 派生主题（城镇 / 蘑菇森林）按基础主题取调色板与物件风格，自己的专属布景在 variant 分支里
+	theme_id = ThemesData.base_of(theme)
+	variant = str(theme["id"])
 	quality = p_quality
 	var qp := EnvironmentFactory.quality_preset(quality)
 	density = qp["scenery"]
@@ -58,7 +62,11 @@ func build(p_track: TrackData, p_terrain: TerrainData, p_quality: String, seed :
 	placer = SceneryPlacer.new(track, terrain, rng)
 	batch = SceneryBatch.new(self)
 
-	match theme_id:
+	match variant:
+		"town":
+			SceneryTown.build(self)
+		"mushroom":
+			SceneryMushroom.build(self)
 		"village":
 			SceneryRural.build_village(self)
 		"desert":

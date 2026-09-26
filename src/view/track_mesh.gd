@@ -96,7 +96,7 @@ func _build_road() -> void:
 		"base_color": Color(road_theme["base"]), "speck_color": Color(road_theme["speck"]),
 		"line_color": Color(road_theme["line"]), "center_color": Color(road_theme["center"]),
 		"half_width": hw, "track_length": track.length, "line_glow": 2.2 if night else 0.0,
-		"wet": 0.35 if night else (0.15 if theme["id"] == "snow" else 0.0),
+		"wet": 0.35 if night else (0.15 if ThemesData.base_of(theme) == "snow" else 0.0),
 	})
 	var road := _mesh(_ribbon([[-hw, 0.02], [-hw * 0.5, 0.02], [0.0, 0.02], [hw * 0.5, 0.02], [hw, 0.02]], 1.0), road_mat)
 	road.name = "Road"
@@ -110,7 +110,7 @@ func _build_road() -> void:
 		_mesh(_ribbon(offs, 1.0), curb_mat).name = "Curb"
 
 	var sh_mat := _shader_mat(GROUND_SHADER, {"tint": Color(theme["shoulder"]), "use_vertex_color": false,
-		"kind": GROUND_KIND.get(theme["id"], 0), "detail": 0.25})
+		"kind": GROUND_KIND.get(ThemesData.base_of(theme), 0), "detail": 0.25})
 	for side: float in [-1.0, 1.0]:
 		var a := side * (hw + CURB_W)
 		var b := side * (track.wall_offset + 0.2)

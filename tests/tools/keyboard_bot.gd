@@ -36,6 +36,17 @@ func _initialize() -> void:
 			if absf(diff) > 0.9:
 				inp.throttle = 0.0
 				inp.brake = 0.6
+			# 会看路的玩家：前方急弯需要的速度（漂移时侧向加速度约 38 m/s²）低于当前速度就松油门 / 点刹
+			var need := INF
+			for j in range(2, 40, 2):
+				var c := tr.rl_curv[(int(p.s) + j) % tr.n]
+				if c > 1e-4:
+					need = minf(need, sqrt(sqrt(38.0 / c) * sqrt(38.0 / c) + 2.0 * 20.0 * j * tr.spacing))
+			if p.speed > need + 3.0:
+				inp.throttle = 0.0
+				inp.brake = 0.5
+			elif p.speed > need:
+				inp.throttle = 0.0
 			# 松开漂移后重新点一下油门（小喷）
 			inp.throttle_pressed = false
 			if p.instant_window > 0.0 and prev_throttle > 0.0:

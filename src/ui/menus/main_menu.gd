@@ -38,7 +38,7 @@ func build() -> void:
 	var quick := Widgets.menu_button("快速比赛", "竞速赛 · 道具赛  和 7 位 AI 一决高下", "flag", "primary", UiTheme.WHITE)
 	quick.click_sound = "ui_confirm"
 	quick.pressed.connect(func() -> void: root.push("setup", {"kind": "quick"}))
-	var gp := Widgets.menu_button("大奖赛", "新星杯 · 疾风杯  三场积分定冠军", "trophy", "normal", UiTheme.SUN)
+	var gp := Widgets.menu_button("大奖赛", "新星杯 · 疾风杯  四场积分定冠军", "trophy", "normal", UiTheme.SUN)
 	gp.pressed.connect(func() -> void: root.push("setup", {"kind": "gp"}))
 	var tt := Widgets.menu_button("计时赛", "单人冲刺  挑战自己的幽灵车", "clock", "normal", UiTheme.BUBBLE)
 	tt.pressed.connect(func() -> void: root.push("setup", {"kind": "time"}))

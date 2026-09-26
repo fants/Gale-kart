@@ -9,7 +9,7 @@ const MODE_NOTES := {
 	"speed": "漂移集气、释放氮气，和 7 位 AI 对手比拼纯速度。",
 	"item": "撞碎道具箱获得道具，用导弹、水炸弹、香蕉皮扰乱对手。",
 	"time": "独自冲刺最快成绩，最佳一局会作为幽灵车陪你跑。",
-	"gp": "同一杯赛连跑 3 场，按名次得分（10 / 8 / 6 / 5 / 4 / 3 / 2 / 1），总分最高者夺冠。",
+	"gp": "同一杯赛连跑 4 场，按名次得分（10 / 8 / 6 / 5 / 4 / 3 / 2 / 1），总分最高者夺冠。",
 }
 const TITLES := {"quick": "快速比赛", "time": "计时赛", "gp": "大奖赛"}
 const LEFT_W := 1100.0
@@ -68,7 +68,7 @@ func build() -> void:
 	left.add_theme_constant_override("separation", 16)
 	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root_row.add_child(left)
-	left.add_child(top_bar(str(TITLES.get(kind, "快速比赛")), "单人挑战" if kind == "time" else ("三场积分" if kind == "gp" else "")))
+	left.add_child(top_bar(str(TITLES.get(kind, "快速比赛")), "单人挑战" if kind == "time" else ("四场积分" if kind == "gp" else "")))
 	var panel := Widgets.panel()
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(panel)
@@ -239,8 +239,8 @@ func _build_race_tab() -> Control:
 			cups.add_child(c)
 	else:
 		var grid := GridContainer.new()
-		grid.columns = 3
-		grid.add_theme_constant_override("h_separation", 16)
+		grid.columns = 4
+		grid.add_theme_constant_override("h_separation", 14)
 		grid.add_theme_constant_override("v_separation", 16)
 		v.add_child(grid)
 		var group := ButtonGroup.new()
@@ -277,7 +277,7 @@ func _track_card(t: Dictionary) -> Widgets.PopButton:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
 	var thumb := Widgets.TrackThumb.new(id)
-	thumb.custom_minimum_size = Vector2(0, 132)
+	thumb.custom_minimum_size = Vector2(0, 112)
 	thumb.bg_color = Color(str((theme["ground"] as Dictionary)["base"]))
 	thumb.line_color = Color(str((theme["road"] as Dictionary)["base"])).lightened(0.4)
 	thumb.line_w = 6.0
@@ -285,10 +285,10 @@ func _track_card(t: Dictionary) -> Widgets.PopButton:
 	v.add_child(thumb)
 	var r1 := HBoxContainer.new()
 	v.add_child(r1)
-	var nm := Widgets.label(str(t["name"]), 30)
+	var nm := Widgets.label(str(t["name"]), 26)
 	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	r1.add_child(nm)
-	var stars := Widgets.star_rating(int(t["difficulty"]), 3, 22.0)
+	var stars := Widgets.star_rating(int(t["difficulty"]), 3, 18.0)
 	stars.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	r1.add_child(stars)
 	var r2 := HBoxContainer.new()
@@ -300,7 +300,7 @@ func _track_card(t: Dictionary) -> Widgets.PopButton:
 	var best := Widgets.label("", 18, UiTheme.INK, true)
 	best.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	r2.add_child(best)
-	var c := Widgets.card(v, Vector2(330, 238))
+	var c := Widgets.card(v, Vector2(240, 212))
 	c.set_meta("best", best)
 	c.pressed.connect(func() -> void: _pick("track_id", id))
 	_track_cards[id] = c
@@ -338,13 +338,13 @@ func _cup_card(cup: Dictionary) -> Widgets.PopButton:
 		tv.add_theme_constant_override("separation", 4)
 		tracks.add_child(tv)
 		var th := Widgets.TrackThumb.new(str(t["id"]))
-		th.custom_minimum_size = Vector2(0, 170)
+		th.custom_minimum_size = Vector2(0, 150)
 		th.bg_color = Color(str((theme["ground"] as Dictionary)["base"]))
 		th.line_color = Color(str((theme["road"] as Dictionary)["base"])).lightened(0.4)
 		th.line_w = 5.0
 		th.pad = 10.0
 		tv.add_child(th)
-		var tl := Widgets.label("%d. %s" % [i + 1, t["name"]], 24)
+		var tl := Widgets.label("%d. %s" % [i + 1, t["name"]], 20)
 		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tv.add_child(tl)
 	var foot := HBoxContainer.new()
@@ -352,7 +352,7 @@ func _cup_card(cup: Dictionary) -> Widgets.PopButton:
 	v.add_child(foot)
 	for col: Color in [UiTheme.GOLD, UiTheme.SILVER, UiTheme.BRONZE]:
 		foot.add_child(Widgets.Icon.new("trophy", 38.0, col))
-	var fl := Widgets.label("三场总分前三名登上领奖台", 22, UiTheme.INK_2)
+	var fl := Widgets.label("%d 场总分前三名登上领奖台" % ids.size(), 22, UiTheme.INK_2)
 	fl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	foot.add_child(fl)
 	var c := Widgets.card(v, Vector2(500, 380))

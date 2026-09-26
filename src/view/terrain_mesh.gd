@@ -84,9 +84,9 @@ func build(track: TrackData, terrain: TerrainData, cell: float) -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = GROUND_SHADER
 	mat.set_shader_parameter("use_vertex_color", true)
-	mat.set_shader_parameter("kind", TrackMesh.GROUND_KIND.get(theme["id"], 0))
+	mat.set_shader_parameter("kind", TrackMesh.GROUND_KIND.get(ThemesData.base_of(theme), 0))
 	mat.set_shader_parameter("detail", 0.2)
-	mat.set_shader_parameter("sparkle", 0.6 if theme["id"] == "snow" else 0.0)
+	mat.set_shader_parameter("sparkle", 0.6 if ThemesData.base_of(theme) == "snow" else 0.0)
 	var mi := MeshInstance3D.new()
 	mi.name = "TerrainSurface"
 	mi.mesh = mesh

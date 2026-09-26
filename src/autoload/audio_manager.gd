@@ -13,7 +13,7 @@ const SFX_NAMES: Array[String] = [
 	"spin", "shield", "shield_block", "cloud", "thunder", "magnet", "ufo", "water_fly", "respawn",
 	"wrong_way", "ui_click", "ui_hover", "ui_back", "ui_confirm", "ui_pause",
 ]
-const MUSIC_NAMES: Array[String] = ["menu", "village", "desert", "snow", "forest", "circuit", "city", "results"]
+const MUSIC_NAMES: Array[String] = ["menu", "village", "desert", "snow", "forest", "circuit", "city", "town", "hairpin", "results"]
 const LOOP_SFX: Array[String] = ["engine_loop", "drift_loop"]
 
 ## 音效文件都归一到 -1 dBFS，这里按用途拉开层次（dB，未列出的为 0）

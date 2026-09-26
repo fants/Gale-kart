@@ -74,7 +74,7 @@ func setup(quality: String, theme: Dictionary) -> void:
 	skids = SkidMarks.new()
 	skids.name = "SkidMarks"
 	add_child(skids)
-	var tid: String = theme.get("id", "village")
+	var tid: String = ThemesData.base_of(theme)
 	_night = theme.get("night", false)
 	skids.configure(tid, _night)
 

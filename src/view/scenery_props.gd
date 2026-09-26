@@ -273,7 +273,7 @@ static func start_arch(track: TrackData, theme: Dictionary) -> Node3D:
 	var root := Node3D.new()
 	root.name = "StartArch"
 	var night: bool = theme.get("night", false)
-	var theme_id: String = theme["id"]
+	var theme_id: String = ThemesData.base_of(theme)
 	var span := track.wall_offset + 2.2
 	var accent := Color(theme["curb"][0])
 	var pillar_col := Color(theme["wall"]["a"])

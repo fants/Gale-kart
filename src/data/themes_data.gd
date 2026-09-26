@@ -2,6 +2,7 @@ class_name ThemesData
 extends RefCounted
 ## 赛道主题：天空、雾、光照、地面、路面、路缘、护墙、天气。
 ## 颜色一律用 "#RRGGBB" 字符串存储，使用时 Color(str) 转换。
+## base：派生主题所基于的主题 id（场景物件、地面、特效等按 base 处理，颜色 / 光照 / 护墙用自己的）。
 ## fog.near / fog.far 单位米（环境雾按此换算密度）；light.sun_dir 为指向太阳的方向。
 
 const THEMES: Dictionary = {
@@ -60,6 +61,28 @@ const THEMES: Dictionary = {
 		"curb": ["#FF4D5E", "#FFFFFF"],
 		"wall": {"style": "tire", "a": "#22252E", "b": "#FF4D5E"},
 	},
+	"town": {
+		"id": "town", "base": "village", "time": "day", "weather": "leaves", "night": false,
+		"sky": {"top": "#4FA6EE", "horizon": "#DDF0FF", "sun": "#FFF2D8"},
+		"fog": {"color": "#D8EAF7", "near": 150.0, "far": 760.0},
+		"light": {"sun": "#FFEFD6", "sun_energy": 1.35, "sun_dir": [-0.45, 0.72, 0.5], "ambient": "#DCEBFF", "ambient_energy": 0.55},
+		"ground": {"base": "#86C55E", "alt": "#6FB24C", "far": "#8FCB6C"},
+		"shoulder": "#C9B89A",
+		"road": {"base": "#6B6670", "speck": "#7C7680", "line": "#FFFFFF", "center": "#FFD84A"},
+		"curb": ["#E0533D", "#FFF3DC"],
+		"wall": {"style": "stone", "a": "#C8553D", "b": "#8E3B2A"},
+	},
+	"mushroom": {
+		"id": "mushroom", "base": "forest", "time": "day", "weather": "leaves", "night": false,
+		"sky": {"top": "#5AA8E0", "horizon": "#F4E6C4", "sun": "#FFE3A8"},
+		"fog": {"color": "#D9E4C0", "near": 110.0, "far": 640.0},
+		"light": {"sun": "#FFD9A0", "sun_energy": 1.35, "sun_dir": [0.55, 0.5, -0.45], "ambient": "#E3E8C8", "ambient_energy": 0.5},
+		"ground": {"base": "#6DAF3F", "alt": "#5A9A33", "far": "#7AB84E"},
+		"shoulder": "#A08A5A",
+		"road": {"base": "#7A6A58", "speck": "#8B7B68", "line": "#FFF6E0", "center": "#FFD84A"},
+		"curb": ["#E24A3B", "#FFF6E0"],
+		"wall": {"style": "fence", "a": "#F2DDB4", "b": "#A8703F"},
+	},
 	"city": {
 		"id": "city", "time": "night", "weather": "none", "night": true,
 		"sky": {"top": "#070B26", "horizon": "#46206A", "sun": "#FFB3F0"},
@@ -76,3 +99,8 @@ const THEMES: Dictionary = {
 
 static func get_theme(id: String) -> Dictionary:
 	return THEMES.get(id, THEMES["village"])
+
+
+## 主题的基础类型（派生主题返回 base，否则返回自己的 id）
+static func base_of(theme: Dictionary) -> String:
+	return str(theme.get("base", theme.get("id", "village")))

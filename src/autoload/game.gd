@@ -1,6 +1,6 @@
 extends Node
 ## 全局流程：标题 → 主菜单 → 赛前设置 → 加载 → 比赛 → 结算（颁奖台）→ 回放 / 再来一局 / 下一赛道 / 返回；
-## 暂停菜单、大奖赛（三场积分 + 积分榜 + 杯赛颁奖）、计时赛。全局 F11 切换全屏。
+## 暂停菜单、大奖赛（四场积分 + 积分榜 + 杯赛颁奖）、计时赛。全局 F11 切换全屏。
 ## 命令行（调试 / 截图 / 演示）：
 ##   godot --path . -- --race=village [--mode=speed|item|time] [--autopilot] [--quality=high]
 ##         [--laps=3] [--shots=4,10,20] [--out=/abs/dir] [--quit-after=25] [--size=1920x1080] [--skip-intro]
@@ -68,6 +68,10 @@ func boot(main_node: Node) -> void:
 		for t in str(args["shots"]).split(","):
 			_shots.append(float(t))
 	_quit_after = float(args.get("quit-after", "-1"))
+	# 调试 / 截图 / 演示 / 冒烟时存档写到单独的文件，不污染玩家存档
+	if args.has("race") or args.has("menu") or args.has("flow"):
+		Store.save_path = "user://demo_save.json"
+		Store.load_from_disk()
 	if args.has("race"):
 		var sel := Store.selection.duplicate()
 		sel["track_id"] = args["race"]
@@ -79,9 +83,6 @@ func boot(main_node: Node) -> void:
 		start_race(sel, {"autopilot": args.has("autopilot"), "quality": args.get("quality", Store.settings.get("quality", "high")),
 			"skip_intro": args.has("skip-intro"), "seed": 7, "record": args.has("record")})
 		return
-	# 演示 / 冒烟时存档写到单独的文件，不污染玩家存档
-	if args.has("menu") or args.has("flow"):
-		Store.save_path = "user://demo_save.json"
 	if args.has("menu"):
 		_clock = true
 		_boot_demo(str(args["menu"]))
@@ -552,7 +553,7 @@ func _demo_gp(races: int) -> void:
 ## 冒烟流程：按键模拟真实操作（键盘事件经过焦点系统与比赛输入）
 ##   smoke：标题 → 主菜单 → 赛前设置 → 开始比赛（自动驾驶 1 圈）→ 冲线 → 结算
 ##   pause：比赛中 Esc 暂停 → Esc 继续 → P 暂停 → 设置子面板 → 返回 → 退出比赛 → 确认 → 主菜单
-##   gp：新星杯 3 场（自动驾驶 1 圈）→ 每场结算 → 积分榜 → 颁奖
+##   gp：新星杯 4 场（自动驾驶 1 圈）→ 每场结算 → 积分榜 → 颁奖
 func _boot_flow() -> void:
 	args["autopilot"] = "true"
 	Store.selection["laps"] = 1
@@ -594,7 +595,7 @@ func _boot_flow() -> void:
 			gsel["gp_rule"] = "speed"
 			start_gp("star", gsel)
 			_flow = []
-			for i in 3:
+			for i in (TracksData.cup_by_id("star")["tracks"] as Array).size():
 				_flow.append([0.1, "wait_page", "ResultsScreen"])
 				_flow.append([2.0, "shot", "gp_results_%d" % (i + 1)])
 				_flow.append([0.1, "key", KEY_ENTER])

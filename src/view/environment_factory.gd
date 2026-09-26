@@ -22,6 +22,8 @@ const TUNE := {
 	"forest": {"fog_k": 1.35, "fog_sky": 0.2, "cloud": 0.36, "exposure": 1.0, "sat": 1.2, "contrast": 1.06, "ambient": 1.0},
 	"circuit": {"fog_k": 1.2, "fog_sky": 0.2, "cloud": 0.55, "exposure": 1.0, "sat": 1.18, "contrast": 1.06, "ambient": 1.0},
 	"city": {"fog_k": 1.0, "fog_sky": 0.25, "cloud": 0.0, "exposure": 1.15, "sat": 1.1, "contrast": 1.06, "ambient": 1.0},
+	"town": {"fog_k": 1.3, "fog_sky": 0.16, "cloud": 0.42, "exposure": 1.0, "sat": 1.2, "contrast": 1.06, "ambient": 1.0},
+	"mushroom": {"fog_k": 1.35, "fog_sky": 0.16, "horizon_to": "#BFE0F5", "horizon_mix": 0.45, "cloud": 0.4, "exposure": 1.0, "sat": 1.22, "contrast": 1.07, "ambient": 1.0},
 }
 
 
@@ -34,7 +36,7 @@ static func create(theme: Dictionary, quality: String) -> Dictionary:
 	var qp := quality_preset(quality)
 	var night: bool = theme.get("night", false)
 	var sunset: bool = theme.get("time", "day") == "sunset"
-	var tune: Dictionary = TUNE.get(theme.get("id", ""), {})
+	var tune: Dictionary = TUNE.get(theme.get("id", ""), TUNE.get(ThemesData.base_of(theme), {}))
 	var horizon := Color(theme["sky"]["horizon"])
 	if tune.has("horizon_to"):
 		horizon = horizon.lerp(Color(str(tune["horizon_to"])), float(tune["horizon_mix"]))
@@ -92,7 +94,7 @@ static func create(theme: Dictionary, quality: String) -> Dictionary:
 	e.ssao_intensity = 1.6
 	e.ssao_power = 1.4
 	# 体积雾（夜城、森林）
-	if qp["volumetric"] and (night or theme["id"] == "forest"):
+	if qp["volumetric"] and (night or ThemesData.base_of(theme) == "forest"):
 		e.volumetric_fog_enabled = true
 		e.volumetric_fog_density = 0.012 if night else 0.006
 		e.volumetric_fog_albedo = Color(theme["fog"]["color"])
