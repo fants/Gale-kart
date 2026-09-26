@@ -9,6 +9,7 @@ var _rows: Array[Control] = []
 
 
 func build() -> void:
+	stage = "hero"
 	dim = 1.0
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

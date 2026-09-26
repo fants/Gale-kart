@@ -17,6 +17,8 @@ uniform bool use_art = false;
 uniform sampler2D art : source_color, filter_linear_mipmap;
 uniform float art_aspect = 1.7778;
 uniform float art_wash = 0.18;
+// 背景虚化（mip 级别）：车库里让车和人物跳出来
+uniform float art_blur = 0.0;
 
 void fragment() {
 	vec2 uv = UV;
@@ -29,7 +31,7 @@ void fragment() {
 		} else {
 			tuv.x *= aspect / art_aspect;
 		}
-		col = texture(art, tuv + 0.5).rgb;
+		col = textureLod(art, tuv + 0.5, art_blur).rgb;
 		// 左侧（菜单按钮区）多罩一点白
 		float wash = art_wash + 0.2 * smoothstep(0.55, 0.0, uv.x);
 		col = mix(col, vec3(1.0, 0.99, 0.97), wash);

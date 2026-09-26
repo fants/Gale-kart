@@ -96,36 +96,12 @@ func _build_stage(top: Color, bottom: Color, floor_color: Color, floor_radius :=
 	add_child(fill_l)
 	fill_l.look_at_from_position(Vector3(-7, 3, 5), Vector3.ZERO)
 
-	# 圆形展台：光滑台面（屏幕空间反射出倒影）+ 彩色侧边 + 墨线描边
+	# 圆形展台：光滑台面（屏幕空间反射出倒影）+ 彩色侧边 + 墨线描边（floor_radius <= 0 时不要展台）
 	platform = Node3D.new()
 	platform.name = "Platform"
 	add_child(platform)
-	var side := MeshInstance3D.new()
-	var sm := CylinderMesh.new()
-	sm.top_radius = floor_radius
-	sm.bottom_radius = floor_radius * 0.94
-	sm.height = 0.9
-	sm.radial_segments = 96
-	side.mesh = sm
-	side.position.y = -0.62
-	side.material_override = toon_mat(side_color, 0.5)
-	platform.add_child(side)
-	var disc := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = floor_radius
-	cm.bottom_radius = floor_radius
-	cm.height = 0.14
-	cm.radial_segments = 96
-	disc.mesh = cm
-	disc.position.y = -0.1
-	var dm := StandardMaterial3D.new()
-	dm.albedo_color = floor_color
-	dm.roughness = 0.22
-	dm.metallic_specular = 0.35
-	disc.material_override = dm
-	platform.add_child(disc)
-	platform.add_child(ring(floor_radius, 0.07, UiTheme.INK, -0.03))
-	platform.add_child(ring(floor_radius * 0.94, 0.07, UiTheme.INK, -1.07))
+	if floor_radius > 0.0:
+		_build_platform(floor_color, floor_radius, side_color)
 
 	camera = Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_FRUSTUM
@@ -199,6 +175,36 @@ static func star_mesh(r_outer: float, r_inner: float, depth: float) -> ArrayMesh
 
 
 ## 设置主体在屏幕上的矩形（视口比例）；instant 为 true 时不做过渡
+
+func _build_platform(floor_color: Color, floor_radius: float, side_color: Color) -> void:
+	var side := MeshInstance3D.new()
+	var sm := CylinderMesh.new()
+	sm.top_radius = floor_radius
+	sm.bottom_radius = floor_radius * 0.94
+	sm.height = 0.9
+	sm.radial_segments = 96
+	side.mesh = sm
+	side.position.y = -0.62
+	side.material_override = toon_mat(side_color, 0.5)
+	platform.add_child(side)
+	var disc := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = floor_radius
+	cm.bottom_radius = floor_radius
+	cm.height = 0.14
+	cm.radial_segments = 96
+	disc.mesh = cm
+	disc.position.y = -0.1
+	var dm := StandardMaterial3D.new()
+	dm.albedo_color = floor_color
+	dm.roughness = 0.22
+	dm.metallic_specular = 0.35
+	disc.material_override = dm
+	platform.add_child(disc)
+	platform.add_child(ring(floor_radius, 0.07, UiTheme.INK, -0.03))
+	platform.add_child(ring(floor_radius * 0.94, 0.07, UiTheme.INK, -1.07))
+
+
 func set_view_rect(r: Rect2, instant := false) -> void:
 	view_rect = r
 	if instant or not _rect_ready:

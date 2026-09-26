@@ -1,6 +1,6 @@
 class_name MenuRoot
 extends Node
-## 菜单总管：3D 背景舞台（车库 / 颁奖台）+ 页面栈 + 转场（淡入 + 滑动）+ 返回键 + 确认框。
+## 菜单总管：背景（首页大图 / 3D 车库 / 3D 颁奖台）+ 页面栈 + 转场（淡入 + 滑动）+ 返回键 + 确认框。
 ## Esc / 手柄 B 返回上一页；Q / E、LB / RB 切换标签；页面打开时默认聚焦第一个按钮。
 
 const BLUR_SHADER := preload("res://assets/shaders/ui_blur.gdshader")
@@ -8,6 +8,7 @@ const SLIDE := 90.0
 
 var garage: GarageStage
 var podium: PodiumStage
+var hero: HeroBackdrop
 var layer: CanvasLayer
 var holder: Control
 var dimmer: ColorRect
@@ -176,8 +177,23 @@ func focus_default() -> void:
 		Widgets.focus_quiet(f)
 
 
-## 按当前页面切换 3D 舞台、机位、压暗
+## 按当前页面切换背景（首页大图 / 3D 舞台）、机位、压暗
 func _apply_stage(page: MenuPage) -> void:
+	if page.stage == "hero":
+		if hero == null:
+			hero = HeroBackdrop.new()
+			add_child(hero)
+		var any_stage := (garage != null and garage.visible) or (podium != null and podium.visible)
+		# 淡入结束后停掉下面的 3D 舞台（期间又切走了就不停）
+		hero.set_shown(true, not any_stage, func() -> void:
+			var cur := current()
+			if cur != null and cur.stage == "hero":
+				_hide_stage(garage)
+				_hide_stage(podium))
+		set_dim(page.dim)
+		return
+	if hero != null and hero.shown:
+		hero.set_shown(false)
 	if page.stage == "podium":
 		if garage:
 			garage.visible = false
@@ -212,6 +228,14 @@ func _apply_stage(page: MenuPage) -> void:
 	set_dim(page.dim)
 
 
+func _hide_stage(st: MenuStage) -> void:
+	if st == null:
+		return
+	st.visible = false
+	st.bg_layer.visible = false
+	st.set_process(false)
+
+
 func set_dim(v: float) -> void:
 	if _dim_tw:
 		_dim_tw.kill()
@@ -230,7 +254,7 @@ func _set_dim_now(v: float) -> void:
 ## 页面内容变化后刷新机位（例如设置页的右侧预览区域）
 func refresh_view() -> void:
 	var page := current()
-	if page == null:
+	if page == null or page.stage == "hero":
 		return
 	var st: MenuStage = podium if page.stage == "podium" else garage
 	if st:

@@ -14,6 +14,7 @@ var _done := false
 
 
 func build() -> void:
+	stage = "hero"
 	var col := VBoxContainer.new()
 	col.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
 	col.offset_left = 130

@@ -11,6 +11,7 @@ var _ride_panel: Control
 
 
 func build() -> void:
+	stage = "hero"
 	var col := VBoxContainer.new()
 	col.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
 	col.offset_left = 90

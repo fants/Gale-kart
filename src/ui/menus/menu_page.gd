@@ -4,7 +4,7 @@ extends Control
 
 var root: MenuRoot
 var params: Dictionary = {}
-## 背景舞台："garage" 车库 / "podium" 颁奖台
+## 背景："hero" 首页大图 / "garage" 3D 车库 / "podium" 3D 颁奖台
 var stage := "garage"
 ## 3D 背景压暗（0..1，模糊 + 墨蓝色调）
 var dim := 0.0

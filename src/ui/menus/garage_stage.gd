@@ -29,9 +29,11 @@ var _drag_hold := 0.0
 func _ready() -> void:
 	name = "GarageStage"
 	add_to_group("garage_stage")
-	_build_stage(Color("#7FD6FF"), Color("#FFE3F1"), Color("#CDEBFF"), 3.6, UiTheme.BUBBLE, "day")
-	target = Vector3(0.0, 0.35, 0.0)
-	subject_radius = 3.0
+	_build_stage(Color("#7FD6FF"), Color("#FFE3F1"), Color("#CDEBFF"), 0.0, UiTheme.BUBBLE, "day")
+	target = Vector3(0.0, 0.45, 0.0)
+	subject_radius = 2.35
+	bg_mat.set_shader_parameter("art_blur", 2.6)
+	bg_mat.set_shader_parameter("art_wash", 0.12)
 	fill = 0.96
 	pitch = 0.26
 	_build_table()
@@ -43,31 +45,42 @@ func _build_table() -> void:
 	table = Node3D.new()
 	table.name = "Turntable"
 	add_child(table)
-	var plate := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 2.55
-	cm.bottom_radius = 2.65
-	cm.height = 0.2
-	cm.radial_segments = 72
-	plate.mesh = cm
-	plate.position.y = 0.06
-	plate.material_override = toon_mat(UiTheme.WHITE, 0.25)
-	table.add_child(plate)
-	table.add_child(ring(2.56, 0.06, UiTheme.INK, 0.16))
-	table.add_child(ring(2.2, 0.08, UiTheme.SUN, 0.17))
-	table.add_child(ring(2.65, 0.06, UiTheme.INK, -0.04))
-	for i in 12:
-		var d := MeshInstance3D.new()
-		var dcm := CylinderMesh.new()
-		dcm.top_radius = 0.11
-		dcm.bottom_radius = 0.11
-		dcm.height = 0.05
-		d.mesh = dcm
-		var a := TAU * i / 12.0
-		d.position = Vector3(cos(a) * 2.4, 0.17, sin(a) * 2.4)
-		d.material_override = toon_mat(UiTheme.RED if i % 2 == 1 else UiTheme.BUBBLE)
-		table.add_child(d)
-
+	# 不要实体转台：地上一团柔和的接触阴影 + 一圈随转台转动的发光圆环
+	var shadow := MeshInstance3D.new()
+	var sq := PlaneMesh.new()
+	sq.size = Vector2(5.4, 5.4)
+	shadow.mesh = sq
+	shadow.position.y = 0.01
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.06, 0.08, 0.2, 0.55))
+	grad.set_color(1, Color(0.06, 0.08, 0.2, 0.0))
+	grad.add_point(0.45, Color(0.06, 0.08, 0.2, 0.32))
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(1.0, 0.5)
+	gt.width = 256
+	gt.height = 256
+	var sm := StandardMaterial3D.new()
+	sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sm.albedo_texture = gt
+	sm.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	sm.render_priority = -1
+	shadow.material_override = sm
+	shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(shadow)
+	var ring_mi := MeshInstance3D.new()
+	var rq := PlaneMesh.new()
+	rq.size = Vector2(6.0, 6.0)
+	ring_mi.mesh = rq
+	ring_mi.position.y = 0.02
+	var rm := ShaderMaterial.new()
+	rm.shader = preload("res://assets/shaders/garage_ring.gdshader")
+	ring_mi.material_override = rm
+	ring_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	table.add_child(ring_mi)
 
 ## 漂浮装饰：半透明彩虹道具箱与星星
 func _build_floaters() -> void:
