@@ -32,7 +32,7 @@ func build() -> void:
 	var hr := HBoxContainer.new()
 	hr.add_theme_constant_override("separation", 18)
 	head.add_child(hr)
-	hr.add_child(Widgets.Icon.new("trophy", 96.0, UiTheme.SUN))
+	hr.add_child(Widgets.Icon.new("cup_" + str(gp.get("cup_id", "star")), 110.0, UiTheme.SUN))
 	hr.add_child(Widgets.title(str(gp.get("cup_name", "大奖赛")), 96, UiTheme.SUN, false, 16))
 	var sub := Widgets.label("第 %d / %d 场结束 · 积分榜" % [done, tracks.size()], 32)
 	sub.add_theme_color_override("font_outline_color", UiTheme.CLOUD)

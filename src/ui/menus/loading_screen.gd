@@ -73,6 +73,11 @@ func setup(sel: Dictionary, gp: Dictionary) -> void:
 	mat.shader = preload("res://assets/shaders/ui_loading.gdshader")
 	mat.set_shader_parameter("color_a", Color(str(sky["top"])))
 	mat.set_shader_parameter("color_b", Color(str(sky["horizon"])))
+	var art := UiArt.track_art(str(def["id"]))
+	if art != null:
+		mat.set_shader_parameter("use_art", true)
+		mat.set_shader_parameter("art", art)
+		mat.set_shader_parameter("art_aspect", float(art.get_width()) / art.get_height())
 	bg.material = mat
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(bg)

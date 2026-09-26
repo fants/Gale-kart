@@ -1,6 +1,6 @@
 class_name ItemsData
 extends RefCounted
-## 道具静态数据与按名次加权的发放表。图标在 assets/ui/items/<id>.png（tools/item_icons.py 生成）。
+## 道具静态数据与按名次加权的发放表。图标在 assets/ui/items/<id>.png（tools/key_icons.py 抠图生成）。
 
 const ITEMS: Dictionary = {
 	"nitro": {"name": "氮气", "color": "#3EC6FF", "desc": "立即加速 2 秒。"},

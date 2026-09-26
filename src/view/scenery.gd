@@ -62,6 +62,8 @@ func build(p_track: TrackData, p_terrain: TerrainData, p_quality: String, seed :
 	placer = SceneryPlacer.new(track, terrain, rng)
 	batch = SceneryBatch.new(self)
 
+	# 广告牌先占位，再铺主题布景
+	SceneryAds.build(self)
 	match variant:
 		"town":
 			SceneryTown.build(self)

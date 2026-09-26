@@ -26,14 +26,21 @@ func build() -> void:
 	logo.custom_minimum_size = Vector2(620, 190)
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(logo)
-	var cn := Widgets.title("疾风卡丁", 124, UiTheme.SUN, false, 14)
-	cn.add_theme_constant_override("shadow_offset_y", 10)
-	cn.rotation = deg_to_rad(-3.0)
-	cn.position = Vector2(0, 0)
-	logo.add_child(cn)
-	var en := Widgets.title("G A L E   K A R T", 40, UiTheme.CLOUD, true, 9)
-	en.position = Vector2(10, 136)
-	logo.add_child(en)
+	var tex := UiArt.logo()
+	if tex != null:
+		var img := TextureRect.new()
+		img.texture = tex
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+		img.size = Vector2(450, 450.0 * tex.get_height() / tex.get_width())
+		img.position = Vector2(-10, 0)
+		img.rotation = deg_to_rad(-2.0)
+		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		logo.add_child(img)
+	else:
+		var cn := Widgets.title("疾风卡丁", 124, UiTheme.SUN, false, 14)
+		cn.rotation = deg_to_rad(-3.0)
+		logo.add_child(cn)
 
 	var quick := Widgets.menu_button("快速比赛", "竞速赛 · 道具赛  和 7 位 AI 一决高下", "flag", "primary", UiTheme.WHITE)
 	quick.click_sound = "ui_confirm"

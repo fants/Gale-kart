@@ -1,13 +1,11 @@
 class_name TitleScreen
 extends MenuPage
-## 标题页：弹跳入场、逐字起伏的大 Logo「疾风卡丁 / GALE KART」，「按任意键开始」闪烁。
+## 标题页：从天而降弹跳入场、轻轻浮动的大 Logo「疾风卡丁 / GALE KART」（生图艺术字），「按任意键开始」闪烁。
 
-const LOGO := "疾风卡丁"
-const CHAR_W := 188.0
+const LOGO_W := 840.0
 
-var _chars: Array[Label] = []
 var _logo: Control
-var _en: Label
+var _logo_img: Control
 var _tag: Label
 var _press: Control
 var _t := 0.0
@@ -26,29 +24,28 @@ func build() -> void:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(col)
 
-	# Logo：每个字单独一个 Label，手动排版（容器会复位旋转和缩放）
+	# Logo：艺术字图片（没有图片时退回文字）
 	_logo = Control.new()
-	_logo.custom_minimum_size = Vector2(CHAR_W * LOGO.length() + 40, 250)
 	_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_logo)
-	var colors: Array[Color] = [UiTheme.SUN, UiTheme.SUN, UiTheme.SUN, UiTheme.SUN]
-	for i in LOGO.length():
-		var l := Widgets.title(LOGO[i], 210, colors[i], false, 18)
-		l.add_theme_constant_override("shadow_offset_y", 14)
-		l.add_theme_constant_override("shadow_offset_x", 6)
-		l.position = Vector2(i * CHAR_W, 0)
-		l.size = Vector2(CHAR_W + 40, 250)
-		l.pivot_offset = Vector2(CHAR_W / 2.0, 200)
+	var tex := UiArt.logo()
+	if tex != null:
+		var h := LOGO_W * tex.get_height() / tex.get_width()
+		_logo.custom_minimum_size = Vector2(LOGO_W, h)
+		var img := TextureRect.new()
+		img.texture = tex
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+		img.size = Vector2(LOGO_W, h)
+		img.pivot_offset = Vector2(LOGO_W / 2.0, h / 2.0)
+		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_logo.add_child(img)
+		_logo_img = img
+	else:
+		_logo.custom_minimum_size = Vector2(LOGO_W, 250)
+		var l := Widgets.title("疾风卡丁", 210, UiTheme.SUN, false, 18)
 		_logo.add_child(l)
-		_chars.append(l)
-
-	var en_wrap := Control.new()
-	en_wrap.custom_minimum_size = Vector2(760, 96)
-	en_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(en_wrap)
-	_en = Widgets.title("G A L E   K A R T", 70, UiTheme.CLOUD, true, 12)
-	_en.position = Vector2(14, 0)
-	en_wrap.add_child(_en)
+		_logo_img = l
 
 	_tag = Widgets.label("漂移 · 集气 · 氮气加速 —— 和 7 位对手一决高下！", 32, UiTheme.INK)
 	_tag.add_theme_color_override("font_outline_color", UiTheme.CLOUD)
@@ -88,25 +85,18 @@ func build() -> void:
 
 func on_enter() -> void:
 	_t = 0.0
-	# 逐字从天而降并弹跳
-	for i in _chars.size():
-		var l := _chars[i]
-		l.modulate.a = 0.0
-		l.position.y = -260.0
-		l.rotation = randf_range(-0.4, 0.4)
-		var tw := l.create_tween()
-		tw.tween_interval(0.15 + i * 0.09)
-		tw.tween_property(l, "modulate:a", 1.0, 0.1)
-		tw.parallel().tween_property(l, "position:y", 0.0, 0.55).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-		tw.parallel().tween_property(l, "rotation", 0.0, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_logo.rotation = deg_to_rad(-4.0)
-	_logo.pivot_offset = Vector2(0, 250)
-	_en.modulate.a = 0.0
-	_en.position.x = -120.0
-	var t2 := _en.create_tween()
-	t2.tween_interval(0.7)
-	t2.tween_property(_en, "modulate:a", 1.0, 0.25)
-	t2.parallel().tween_property(_en, "position:x", 14.0, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Logo 从天而降、弹跳落定
+	var l := _logo_img
+	l.modulate.a = 0.0
+	l.position.y = -320.0
+	l.rotation = -0.25
+	l.scale = Vector2.ONE * 0.7
+	var tw := l.create_tween()
+	tw.tween_interval(0.15)
+	tw.tween_property(l, "modulate:a", 1.0, 0.12)
+	tw.parallel().tween_property(l, "position:y", 0.0, 0.7).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(l, "rotation", 0.0, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(l, "scale", Vector2.ONE, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_tag.modulate.a = 0.0
 	var t3 := _tag.create_tween()
 	t3.tween_interval(0.95)
@@ -120,12 +110,12 @@ func view_rect() -> Rect2:
 
 func _process(dt: float) -> void:
 	_t += dt
-	# 逐字起伏（入场结束后）
+	# 入场结束后轻轻浮动、摇摆
 	if _t > 1.0:
-		for i in _chars.size():
-			var l := _chars[i]
-			l.position.y = sin(_t * 2.2 + i * 0.75) * 9.0
-			l.rotation = sin(_t * 1.6 + i * 1.1) * 0.035
+		_logo_img.position.y = sin(_t * 2.0) * 8.0
+		_logo_img.rotation = sin(_t * 1.3) * 0.02
+		var pulse := 1.0 + 0.012 * sin(_t * 3.1)
+		_logo_img.scale = Vector2(pulse, pulse)
 	if _t > 1.2:
 		_press.modulate.a = 0.55 + 0.45 * sin((_t - 1.2) * 4.0)
 

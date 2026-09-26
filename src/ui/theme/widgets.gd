@@ -233,6 +233,9 @@ class TrackThumb extends Control:
 	var line_w := 7.0
 	var pad := 14.0
 	var show_start := true
+	## 赛道插画当底图（有 bg_color 时才显示）；线路改成白线深描边叠在上面
+	var use_art := true
+	var _art_clip: Panel
 
 	func _init(id := "") -> void:
 		track_id = id
@@ -240,9 +243,34 @@ class TrackThumb extends Control:
 		custom_minimum_size = Vector2(160, 100)
 		resized.connect(queue_redraw)
 
+	func _ready() -> void:
+		var tex := UiArt.track_art(track_id)
+		if not use_art or tex == null or bg_color.a <= 0.0:
+			return
+		# 圆角裁切：Panel 画圆角底，clip_children 只让插画显示在圆角里；画在本控件（线路）之下
+		_art_clip = Panel.new()
+		_art_clip.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_art_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_art_clip.add_theme_stylebox_override("panel", UiTheme.box(Color.WHITE, 14, 0, INK, 0))
+		_art_clip.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+		_art_clip.show_behind_parent = true
+		add_child(_art_clip)
+		var art := TextureRect.new()
+		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		art.texture = tex
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_art_clip.add_child(art)
+		line_color = UiTheme.WHITE
+		queue_redraw()
+
 	func _draw() -> void:
-		if bg_color.a > 0.0:
+		if bg_color.a > 0.0 and _art_clip == null:
 			draw_style_box(UiTheme.box(bg_color, 14, 0, INK, 0), Rect2(Vector2.ZERO, size))
+		# 很小的缩略图只显示插画
+		if _art_clip != null and size.y < 80.0:
+			return
 		var pts := Widgets.track_points(track_id)
 		if pts.size() < 3:
 			return
@@ -252,12 +280,23 @@ class TrackThumb extends Control:
 			mn = Vector2(minf(mn.x, p.x), minf(mn.y, p.y))
 			mx = Vector2(maxf(mx.x, p.x), maxf(mx.y, p.y))
 		var ext := mx - mn
-		var avail := size - Vector2(pad, pad) * 2.0
+		# 有插画时线路缩到右下角的半透明小框里，不挡插画
+		var area := Rect2(Vector2.ZERO, size)
+		var lw := line_w
+		if _art_clip != null:
+			var box_size := Vector2(size.x * 0.44, size.y * 0.52)
+			area = Rect2(size - box_size - Vector2(6, 6), box_size)
+			draw_style_box(UiTheme.box(Color(INK, 0.5), 10, 0, INK, 0), area)
+			area = area.grow(-maxf(4.0, box_size.y * 0.1))
+			lw = maxf(2.5, line_w * 0.55)
+		else:
+			area = area.grow(-pad)
+		var avail := area.size
 		# 赛道形状与控件朝向不一致时旋转 90°，尽量填满
 		var rot := (ext.y > ext.x) != (avail.y > avail.x)
 		var e2 := Vector2(ext.y, ext.x) if rot else ext
 		var k := minf(avail.x / maxf(e2.x, 1.0), avail.y / maxf(e2.y, 1.0))
-		var off := (size - e2 * k) / 2.0
+		var off := area.position + (area.size - e2 * k) / 2.0
 		var n := pts.size()
 		var count := clampi(int(ceil(n * progress)), 0, n)
 		var line := PackedVector2Array()
@@ -270,16 +309,16 @@ class TrackThumb extends Control:
 		if progress >= 1.0:
 			line.append(line[0])
 		if line.size() >= 2:
-			draw_polyline(line, INK, line_w + 7.0, true)
-			draw_polyline(line, line_color, line_w, true)
+			draw_polyline(line, INK, lw + 7.0 * lw / line_w, true)
+			draw_polyline(line, line_color, lw, true)
 		if show_start and line.size() > 0:
 			var s0 := line[0]
-			draw_circle(s0, line_w * 0.9 + 3.0, INK)
-			draw_circle(s0, line_w * 0.9, UiTheme.SUN)
+			draw_circle(s0, lw * 0.9 + 3.0, INK)
+			draw_circle(s0, lw * 0.9, UiTheme.SUN)
 		if progress < 1.0 and line.size() > 0:
 			var head := line[line.size() - 1]
-			draw_circle(head, line_w + 5.0, INK)
-			draw_circle(head, line_w + 2.0, UiTheme.RED)
+			draw_circle(head, lw + 5.0, INK)
+			draw_circle(head, lw + 2.0, UiTheme.RED)
 
 
 ## 奖杯（金 / 银 / 铜），带高光扫过动画
@@ -300,6 +339,17 @@ class Trophy extends Control:
 		var s := minf(size.x / 220.0, size.y / 240.0)
 		var o := (size - Vector2(220, 240) * s) / 2.0
 		var tf := func(x: float, y: float) -> Vector2: return o + Vector2(x, y) * s
+		# 生图奖杯 + 周围一闪一闪的星光
+		var tex := UiArt.icon("trophy", cup)
+		if tex != null:
+			var side := minf(size.x, size.y)
+			draw_texture_rect(tex, Rect2((size - Vector2(side, side)) / 2.0, Vector2(side, side)), false)
+			for i in 4:
+				var ph := fmod(shine * 1.4 + i * 0.37, 1.0)
+				var a := sin(ph * PI)
+				var p: Vector2 = tf.call([46.0, 180.0, 160.0, 62.0][i], [40.0, 58.0, 150.0, 128.0][i])
+				draw_colored_polygon(Widgets.star_pts(p, (8.0 + 10.0 * a) * s), Color(1, 1, 1, a))
+			return
 		var w := 4.0 * s
 		var dark := cup.darkened(0.25)
 		# 把手
@@ -750,6 +800,12 @@ static func draw_star(ci: CanvasItem, c: Vector2, r: float, fill: Color, w: floa
 
 ## 图标：在 64×64 的设计空间里绘制，再缩放到 r
 static func draw_icon(ci: CanvasItem, kind: String, r: Rect2, fill: Color) -> void:
+	# 有生图图标就用图片（未获得的奖杯 fill 为灰色：画成灰暗的剪影）
+	var tex := UiArt.icon(kind, fill)
+	if tex != null:
+		var tint := Color(0.62, 0.66, 0.74, 0.75) if fill.is_equal_approx(UiTheme.GRAY) else Color.WHITE
+		ci.draw_texture_rect(tex, r, false, tint)
+		return
 	var k := r.size.x / 64.0
 	var o := r.position
 	var P := func(x: float, y: float) -> Vector2: return o + Vector2(x, y) * k

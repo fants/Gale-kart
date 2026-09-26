@@ -60,7 +60,7 @@ func build() -> void:
 		top.add_child(tr)
 		_trophy = tr
 	else:
-		var md := Widgets.Icon.new("medal", 200.0, UiTheme.BUBBLE)
+		var md := Widgets.Icon.new("star", 200.0, UiTheme.BUBBLE)
 		top.add_child(md)
 		_trophy = md
 	var tv := VBoxContainer.new()

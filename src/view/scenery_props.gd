@@ -300,10 +300,12 @@ static func start_arch(track: TrackData, theme: Dictionary) -> Node3D:
 	parts.append([box(Vector3(span * 2.0 + 2.6, 2.6, 1.4)), xf(Vector3(0, h + 0.3, 0)), beam])
 	parts.append([box(Vector3(span * 2.0 + 2.8, 0.3, 1.6)), xf(Vector3(0, h - 1.1, 0)), trim])
 	parts.append([box(Vector3(span * 2.0 + 2.8, 0.3, 1.6)), xf(Vector3(0, h + 1.7, 0)), trim])
-	# 顶部标牌
-	parts.append([box(Vector3(12.0, 3.2, 0.9)), xf(Vector3(0, h + 3.3, 0)), dark])
-	parts.append([box(Vector3(12.4, 0.25, 1.0)), xf(Vector3(0, h + 4.95, 0)), trim])
-	parts.append([box(Vector3(12.4, 0.25, 1.0)), xf(Vector3(0, h + 1.75, 0)), trim])
+	# 顶部标牌（有 Logo 图片时改为立在横梁上的艺术字剪影）
+	var logo := UiArt.logo()
+	if logo == null:
+		parts.append([box(Vector3(12.0, 3.2, 0.9)), xf(Vector3(0, h + 3.3, 0)), dark])
+		parts.append([box(Vector3(12.4, 0.25, 1.0)), xf(Vector3(0, h + 4.95, 0)), trim])
+		parts.append([box(Vector3(12.4, 0.25, 1.0)), xf(Vector3(0, h + 1.75, 0)), trim])
 	var mi := MeshInstance3D.new()
 	mi.mesh = SceneryLib.merge(parts)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
@@ -313,7 +315,18 @@ static func start_arch(track: TrackData, theme: Dictionary) -> Node3D:
 		var yaw := PI if face < 0.0 else 0.0
 		var z := face * 0.72
 		root.add_child(label("START", FONT_EN, 220, Color(1, 1, 1), Vector3(0, h + 0.3, z), yaw, 0.012))
-		root.add_child(label("疾风卡丁", FONT_CN, 200, Color("#FFD84A"), Vector3(0, h + 3.35, face * 0.47), yaw, 0.0115))
+		if logo == null:
+			root.add_child(label("疾风卡丁", FONT_CN, 200, Color("#FFD84A"), Vector3(0, h + 3.35, face * 0.47), yaw, 0.0115))
+			continue
+		var sp := Sprite3D.new()
+		sp.texture = logo
+		sp.pixel_size = 11.0 / logo.get_width()
+		sp.shaded = false
+		sp.double_sided = false
+		sp.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
+		sp.position = Vector3(0, h + 1.6 + 11.0 * logo.get_height() / logo.get_width() * 0.5, face * 0.05)
+		sp.rotation.y = yaw
+		root.add_child(sp)
 	return root
 
 

@@ -317,7 +317,7 @@ func _cup_card(cup: Dictionary) -> Widgets.PopButton:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 12)
 	v.add_child(head)
-	head.add_child(Widgets.Icon.new("trophy", 56.0, UiTheme.SUN if id == "star" else UiTheme.BUBBLE))
+	head.add_child(Widgets.Icon.new("cup_" + id, 72.0, UiTheme.SUN if id == "star" else UiTheme.BUBBLE))
 	var nm := Widgets.label(str(cup["name"]), 40)
 	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nm.size_flags_vertical = Control.SIZE_SHRINK_CENTER

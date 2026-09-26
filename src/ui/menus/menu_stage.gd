@@ -32,7 +32,7 @@ var _rect_ready := false
 var fill := 0.92
 
 
-func _build_stage(top: Color, bottom: Color, floor_color: Color, floor_radius := 4.4, side_color := UiTheme.BUBBLE) -> void:
+func _build_stage(top: Color, bottom: Color, floor_color: Color, floor_radius := 4.4, side_color := UiTheme.BUBBLE, art := "") -> void:
 	# 画布背景：CanvasLayer 放在负层，Environment 用 BG_CANVAS 把它画在 3D 之后
 	bg_layer = CanvasLayer.new()
 	bg_layer.layer = -10
@@ -44,6 +44,11 @@ func _build_stage(top: Color, bottom: Color, floor_color: Color, floor_radius :=
 	bg_mat.shader = BG_SHADER
 	bg_mat.set_shader_parameter("top_color", top)
 	bg_mat.set_shader_parameter("bottom_color", bottom)
+	var art_tex := UiArt.menu_bg(art) if art != "" else null
+	if art_tex != null:
+		bg_mat.set_shader_parameter("use_art", true)
+		bg_mat.set_shader_parameter("art", art_tex)
+		bg_mat.set_shader_parameter("art_aspect", float(art_tex.get_width()) / art_tex.get_height())
 	bg.material = bg_mat
 	bg_layer.add_child(bg)
 

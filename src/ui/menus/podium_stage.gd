@@ -24,7 +24,7 @@ var _rain: GPUParticles3D
 
 func _ready() -> void:
 	name = "PodiumStage"
-	_build_stage(Color("#8FB8FF"), Color("#FFE6C2"), Color("#FFF4E0"), 7.6, UiTheme.PINK)
+	_build_stage(Color("#8FB8FF"), Color("#FFE6C2"), Color("#FFF4E0"), 7.6, UiTheme.PINK, "golden")
 	bg_mat.set_shader_parameter("ray_color", Color("#FFF3C0"))
 	bg_mat.set_shader_parameter("ray_alpha", 0.22)
 	bg_mat.set_shader_parameter("rays", 16.0)

@@ -710,11 +710,12 @@ func _flow_step(dt: float) -> void:
 						return
 					print("流程冒烟：已继续比赛")
 				"garage_rotated":
-					# 300 像素 × 0.011 弧度 / 像素 ≈ 3.3 弧度（拖动中自动旋转暂停）
+					# 窗口里拖 300 像素（换算成页面像素）× 0.011 弧度 / 像素（拖动中自动旋转暂停）
 					var g := menu.garage if menu else null
 					var turned := g.table.rotation.y - _flow_yaw0 if g else 0.0
-					if g == null or not g.dragging or absf(turned - 3.3) > 0.35:
-						_flow_fail("拖动后转台应转过约 3.3 弧度（实际 %.2f，拖拽中 %s）" % [turned, str(g.dragging if g else false)])
+					var want := 300.0 / get_viewport().get_final_transform().x.x * GarageStage.DRAG_RAD_PER_PX
+					if g == null or not g.dragging or absf(turned - want) > 0.35:
+						_flow_fail("拖动后转台应转过约 %.2f 弧度（实际 %.2f，拖拽中 %s）" % [want, turned, str(g.dragging if g else false)])
 						return
 					print("流程冒烟：拖动 300 像素，转台转过 %.2f 弧度" % turned)
 					_flow_yaw0 = g.table.rotation.y
@@ -745,8 +746,10 @@ func _mouse_drag(phase: String, dx: float) -> void:
 	if ss == null:
 		_flow_fail("当前不是赛前设置页")
 		return
+	# 模拟输入用窗口坐标：页面坐标经视口拉伸变换到窗口
+	var xf := get_viewport().get_final_transform()
 	if phase == "down":
-		_flow_mouse = ss._preview.get_global_rect().get_center()
+		_flow_mouse = xf * ss._preview.get_global_rect().get_center()
 		_flow_yaw0 = menu.garage.table.rotation.y if menu.garage else 0.0
 		var b := InputEventMouseButton.new()
 		b.button_index = MOUSE_BUTTON_LEFT

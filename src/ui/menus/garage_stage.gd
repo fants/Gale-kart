@@ -29,7 +29,7 @@ var _drag_hold := 0.0
 func _ready() -> void:
 	name = "GarageStage"
 	add_to_group("garage_stage")
-	_build_stage(Color("#7FD6FF"), Color("#FFE3F1"), Color("#CDEBFF"), 3.6, UiTheme.BUBBLE)
+	_build_stage(Color("#7FD6FF"), Color("#FFE3F1"), Color("#CDEBFF"), 3.6, UiTheme.BUBBLE, "day")
 	target = Vector3(0.0, 0.35, 0.0)
 	subject_radius = 3.0
 	fill = 0.96
