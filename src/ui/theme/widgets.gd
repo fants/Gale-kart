@@ -550,7 +550,7 @@ static func pin(c: Control, preset: Control.LayoutPreset, margin: Vector2) -> Co
 	return c
 
 
-## 作者署名徽章：铂金小鸟头像 + 「bilibili @名字」。solid：白底粉边（菜单）；否则半透明深底（比赛 / 回放水印）
+## 作者署名徽章：圆形头像 + 「bilibili @名字」。solid：白底粉边（菜单）；否则半透明深底（比赛 / 回放水印）
 static func creator_badge(k := 1.0, solid := true) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -562,7 +562,7 @@ static func creator_badge(k := 1.0, solid := true) -> PanelContainer:
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(h)
 	var ic := TextureRect.new()
-	ic.texture = load("res://assets/ui/creator/mascot.png")
+	ic.texture = load("res://assets/ui/creator/avatar.png")
 	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	ic.custom_minimum_size = Vector2(54, 54) * k
