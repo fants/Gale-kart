@@ -12,6 +12,19 @@ const QUALITY := {
 }
 
 
+## 各主题的画面微调（叠加在主题数据之上，逐个截图调出来的）：
+## fog_k 雾起止距离倍数、fog_sky 雾对天空的影响、horizon_to / horizon_mix 地平线色向某色靠拢（避免蓝橙相混发灰）、
+## cloud 云量、exposure 曝光、sat 饱和度、contrast 对比度、ambient 环境光倍数
+const TUNE := {
+	"village": {"fog_k": 1.3, "fog_sky": 0.18, "cloud": 0.36, "exposure": 1.0, "sat": 1.2, "contrast": 1.06, "ambient": 1.0},
+	"desert": {"fog_k": 1.6, "fog_sky": 0.14, "horizon_to": "#9FD3F7", "horizon_mix": 0.7, "cloud": 0.26, "exposure": 0.95, "sat": 1.25, "contrast": 1.08, "ambient": 0.95},
+	"snow": {"fog_k": 1.6, "fog_sky": 0.05, "horizon_to": "#A9D4F5", "horizon_mix": 0.6, "cloud": 0.28, "exposure": 0.88, "sat": 1.3, "contrast": 1.1, "ambient": 0.9},
+	"forest": {"fog_k": 1.35, "fog_sky": 0.2, "cloud": 0.36, "exposure": 1.0, "sat": 1.2, "contrast": 1.06, "ambient": 1.0},
+	"circuit": {"fog_k": 1.2, "fog_sky": 0.2, "cloud": 0.55, "exposure": 1.0, "sat": 1.18, "contrast": 1.06, "ambient": 1.0},
+	"city": {"fog_k": 1.0, "fog_sky": 0.25, "cloud": 0.0, "exposure": 1.15, "sat": 1.1, "contrast": 1.06, "ambient": 1.0},
+}
+
+
 static func quality_preset(q: String) -> Dictionary:
 	return QUALITY.get(q, QUALITY["high"])
 
@@ -21,20 +34,25 @@ static func create(theme: Dictionary, quality: String) -> Dictionary:
 	var qp := quality_preset(quality)
 	var night: bool = theme.get("night", false)
 	var sunset: bool = theme.get("time", "day") == "sunset"
+	var tune: Dictionary = TUNE.get(theme.get("id", ""), {})
+	var horizon := Color(theme["sky"]["horizon"])
+	if tune.has("horizon_to"):
+		horizon = horizon.lerp(Color(str(tune["horizon_to"])), float(tune["horizon_mix"]))
 
 	var sky_mat := ShaderMaterial.new()
 	sky_mat.shader = SKY_SHADER
 	sky_mat.set_shader_parameter("top_color", Color(theme["sky"]["top"]))
-	sky_mat.set_shader_parameter("horizon_color", Color(theme["sky"]["horizon"]))
+	sky_mat.set_shader_parameter("horizon_color", horizon)
 	sky_mat.set_shader_parameter("ground_color", Color(theme["ground"]["far"]).darkened(0.2))
 	sky_mat.set_shader_parameter("sun_color", Color(theme["sky"]["sun"]))
 	sky_mat.set_shader_parameter("night", night)
-	sky_mat.set_shader_parameter("cloud_amount", 0.0 if night else (0.55 if sunset else 0.42))
+	sky_mat.set_shader_parameter("cloud_amount", float(tune.get("cloud", 0.0 if night else (0.55 if sunset else 0.42))))
 	sky_mat.set_shader_parameter("cloud_color", Color("#FFD2B0") if sunset else Color(1, 1, 1))
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	sky.process_mode = Sky.PROCESS_MODE_REALTIME if night else Sky.PROCESS_MODE_AUTOMATIC
-	sky.radiance_size = Sky.RADIANCE_SIZE_128
+	# 实时天空（夜晚星星闪烁）只支持 256 的辐照度贴图
+	sky.radiance_size = Sky.RADIANCE_SIZE_256 if night else Sky.RADIANCE_SIZE_128
 
 	var e := Environment.new()
 	e.background_mode = Environment.BG_SKY
@@ -42,19 +60,19 @@ static func create(theme: Dictionary, quality: String) -> Dictionary:
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	e.ambient_light_color = Color(theme["light"]["ambient"])
 	e.ambient_light_sky_contribution = 0.55
-	e.ambient_light_energy = float(theme["light"]["ambient_energy"]) * 1.6
+	e.ambient_light_energy = float(theme["light"]["ambient_energy"]) * 1.6 * float(tune.get("ambient", 1.0))
 	e.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	e.tonemap_mode = Environment.TONE_MAPPER_AGX
-	e.tonemap_exposure = 1.0 if not night else 1.15
+	e.tonemap_exposure = float(tune.get("exposure", 1.0 if not night else 1.15))
 	e.tonemap_white = 6.0
 	# 雾：按主题的起止距离做深度雾
 	e.fog_enabled = true
 	e.fog_mode = Environment.FOG_MODE_DEPTH
 	e.fog_light_color = Color(theme["fog"]["color"])
-	e.fog_depth_begin = float(theme["fog"]["near"])
-	e.fog_depth_end = float(theme["fog"]["far"])
+	e.fog_depth_begin = float(theme["fog"]["near"]) * float(tune.get("fog_k", 1.0))
+	e.fog_depth_end = float(theme["fog"]["far"]) * float(tune.get("fog_k", 1.0))
 	e.fog_depth_curve = 1.4
-	e.fog_sky_affect = 0.25
+	e.fog_sky_affect = float(tune.get("fog_sky", 0.25))
 	e.fog_density = 1.0
 	# 辉光
 	e.glow_enabled = qp["glow"]
@@ -84,8 +102,8 @@ static func create(theme: Dictionary, quality: String) -> Dictionary:
 		e.volumetric_fog_sky_affect = 0.0
 	# 色彩调整：略微提饱和，卡通感更强
 	e.adjustment_enabled = true
-	e.adjustment_saturation = 1.18 if not night else 1.1
-	e.adjustment_contrast = 1.06
+	e.adjustment_saturation = float(tune.get("sat", 1.18 if not night else 1.1))
+	e.adjustment_contrast = float(tune.get("contrast", 1.06))
 	e.adjustment_brightness = 1.0
 
 	var we := WorldEnvironment.new()
