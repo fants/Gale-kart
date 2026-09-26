@@ -61,13 +61,12 @@ func handle(events: Array[Dictionary]) -> void:
 			"instant_ready":
 				if me and not replay:
 					hud.show_instant_cue(true)
-					AudioMgr.play("instant_ready", {"volume": 0.6})
 			"instant_boost":
 				if me:
 					if not replay:
 						hud.show_instant_cue(false)
 						hud.sub("瞬间加速！", Color("#3EC6FF"))
-					# 不播音效：连续小喷时「噔噔噔」太吵
+					# 小喷提示和触发都不播音效：连续漂移时太吵
 					fx.burst("instant", _kpos(k))
 					ctl.vibrate(0.25, 0.1, 0.15)
 			"boost_pad":
