@@ -105,15 +105,6 @@ func build() -> void:
 	_preview.gui_input.connect(_on_preview_input)
 	_preview.resized.connect(func() -> void: root.refresh_view.call_deferred())
 	right.add_child(_preview)
-	var hint := Widgets.label("左右拖动可旋转", 20, Color(UiTheme.INK_2, 0.7))
-	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_preview.add_child(hint)
-	hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	hint.offset_left = -120
-	hint.offset_right = 120
-	hint.offset_top = -40
-	hint.offset_bottom = -8
 	var info := _build_info_card()
 	right.add_child(info)
 	start_button = Widgets.button("开始比赛" if kind != "gp" else "开始大奖赛", "primary", "flag", UiTheme.WHITE)
