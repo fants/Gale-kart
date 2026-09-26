@@ -4,20 +4,28 @@ extends MenuPage
 
 const MODES: Array[Array] = [["speed", "竞速赛", UiTheme.BUBBLE], ["item", "道具赛", UiTheme.PINK], ["time", "计时赛", UiTheme.MINT]]
 
+## 卡片上下留白（按 1920×1080 布局）；中间的赛道列表和大奖赛可以滚动
+const V_MARGIN := 56.0
+const SCROLL_STEP := 120.0
+
 var _close: Control
 var _rows: Array[Control] = []
+var _scroll: ScrollContainer
 
 
 func build() -> void:
 	stage = "hero"
 	dim = 1.0
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(center)
 	var card := Widgets.panel()
-	card.custom_minimum_size = Vector2(1560, 0)
-	center.add_child(card)
+	card.anchor_left = 0.5
+	card.anchor_right = 0.5
+	card.anchor_top = 0.0
+	card.anchor_bottom = 1.0
+	card.offset_left = -780.0
+	card.offset_right = 780.0
+	card.offset_top = V_MARGIN
+	card.offset_bottom = -V_MARGIN
+	add_child(card)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	card.add_child(v)
@@ -54,17 +62,31 @@ func build() -> void:
 		hb.add_child(Widgets.badge(str(m[1]), m[2] as Color, 22))
 		hdr.add_child(hb)
 
+	# 中间可滚动：各赛道纪录 + 大奖赛
+	_scroll = ScrollContainer.new()
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.follow_focus = true
+	v.add_child(_scroll)
+	var pad := MarginContainer.new()
+	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pad.add_theme_constant_override("margin_right", 18)
+	pad.add_theme_constant_override("margin_bottom", 6)
+	_scroll.add_child(pad)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 12)
+	pad.add_child(list)
 	for tdef in TracksData.TRACKS:
 		var row := _track_row(tdef)
-		v.add_child(row)
+		list.add_child(row)
 		_rows.append(row)
 
 	# 大奖赛
 	var gp_head := Widgets.section("大奖赛")
-	v.add_child(gp_head)
+	list.add_child(gp_head)
 	var cups := HBoxContainer.new()
 	cups.add_theme_constant_override("separation", 16)
-	v.add_child(cups)
+	list.add_child(cups)
 	for cup in TracksData.CUPS:
 		var cc := _cup_card(cup)
 		cc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -76,7 +98,7 @@ func build() -> void:
 	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	foot.add_child(note)
-	var hints := Widgets.hint_bar([["Esc", "B", "返回"]])
+	var hints := Widgets.hint_bar([["↑|↓", "", "滚动"], ["Esc", "B", "返回"]])
 	foot.add_child(hints)
 
 
@@ -165,6 +187,22 @@ func on_enter() -> void:
 
 func default_focus() -> Control:
 	return _close
+
+
+## 键盘 / 手柄上下键滚动列表（鼠标滚轮由 ScrollContainer 自己处理）
+func _input(ev: InputEvent) -> void:
+	if _scroll == null or root == null or root.current() != self or root.busy:
+		return
+	var dir := 0
+	if ev.is_action_pressed("ui_down", true):
+		dir = 1
+	elif ev.is_action_pressed("ui_up", true):
+		dir = -1
+	if dir == 0:
+		return
+	get_viewport().set_input_as_handled()
+	var tw := create_tween()
+	tw.tween_property(_scroll, "scroll_vertical", _scroll.scroll_vertical + dir * int(SCROLL_STEP), 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 func view_rect() -> Rect2:

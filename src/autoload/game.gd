@@ -560,6 +560,7 @@ func _demo_gp(races: int) -> void:
 ##   pause：比赛中 Esc 暂停 → Esc 继续 → P 暂停 → 设置子面板 → 返回 → 退出比赛 → 确认 → 主菜单
 ##   gp：新星杯 4 场（自动驾驶 1 圈）→ 每场结算 → 积分榜 → 颁奖
 ##   garage：车库页在预览区按住鼠标左右拖动，检查转台旋转与松手惯性
+##   records：最佳纪录页按下键滚动，检查能滚到底
 func _boot_flow() -> void:
 	args["autopilot"] = "true"
 	Store.selection["laps"] = 1
@@ -568,6 +569,15 @@ func _boot_flow() -> void:
 	var sel := Store.selection.duplicate()
 	var which := str(args.get("flow", "smoke"))
 	match which:
+		"records":
+			# 最佳纪录：列表可滚动，按下键滚到底能看到大奖赛
+			goto_menu("records")
+			_flow = [[0.1, "wait_page", "RecordsScreen"], [0.8, "shot", "records_top"]]
+			for i in 8:
+				_flow.append([0.12, "key", KEY_DOWN])
+			_flow.append([0.5, "check", "records_scrolled"])
+			_flow.append([0.1, "shot", "records_bottom"])
+			_flow.append([0.1, "done"])
 		"garage":
 			# 车库预览拖拽旋转：按下 → 分 6 次向右拖 300 像素 → 松开，检查转角与惯性
 			goto_menu("setup", {"kind": "quick", "tab": 1})
@@ -709,6 +719,13 @@ func _flow_step(dt: float) -> void:
 						_flow_fail("应已继续比赛")
 						return
 					print("流程冒烟：已继续比赛")
+				"records_scrolled":
+					var rs := menu.current() as RecordsScreen if menu else null
+					var sb := rs._scroll.get_v_scroll_bar() if rs else null
+					if rs == null or sb == null or rs._scroll.scroll_vertical < int(sb.max_value - sb.page) - 2:
+						_flow_fail("最佳纪录应能滚到底（当前 %d / %d）" % [rs._scroll.scroll_vertical if rs else -1, int(sb.max_value - sb.page) if sb else -1])
+						return
+					print("流程冒烟：最佳纪录已滚到底（%d 像素）" % rs._scroll.scroll_vertical)
 				"garage_rotated":
 					# 窗口里拖 300 像素（换算成页面像素）× 0.011 弧度 / 像素（拖动中自动旋转暂停）
 					var g := menu.garage if menu else null
