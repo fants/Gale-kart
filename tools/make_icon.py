@@ -1,18 +1,19 @@
-"""应用图标：把 assets/branding/icon_art.png（满版方形插画）套进 macOS 风格的圆角方块，输出 assets/icon.png。
+"""应用图标：把满版方形插画套进 macOS 风格的圆角方块，输出 assets/icon.png。
+插画原图（GPT Image 生成）不放在仓库里，运行时传入路径。
 
 1024×1024 透明画布，824×824 的超椭圆圆角方块居中（苹果图标网格），下方一层柔和投影。
 Windows / 窗口图标用同一张图，Godot 导出时自动转成 .icns / .ico。
 
-用法：python3 tools/make_icon.py
+用法：python3 tools/make_icon.py <插画原图.png>
 """
 
 import math
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
-ART = ROOT / "assets/branding/icon_art.png"
 OUT = ROOT / "assets/icon.png"
 
 CANVAS = 1024
@@ -39,7 +40,9 @@ def squircle_mask(size: int) -> Image.Image:
 
 
 def main() -> None:
-    art = Image.open(ART).convert("RGB")
+    if len(sys.argv) < 2:
+        sys.exit("用法：python3 tools/make_icon.py <插画原图.png>")
+    art = Image.open(sys.argv[1]).convert("RGB")
     s = min(art.size)
     art = art.crop(((art.width - s) // 2, (art.height - s) // 2, (art.width + s) // 2, (art.height + s) // 2))
     art = art.resize((BODY, BODY), Image.LANCZOS)

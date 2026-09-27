@@ -5,3 +5,7 @@
 .DS_Store
 build/
 __pycache__/
+# 本地密钥 / 接口配置（生图等），不要提交
+.env
+.env.*
+*.env

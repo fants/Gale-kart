@@ -4,9 +4,9 @@
 
 ## 运行
 
-- **直接玩（不需要装 Godot）**：`build/macos/GaleKart.zip` 解压后双击「疾风卡丁 GALE KART.app」（Intel / Apple 芯片通用）；Windows 用 `build/windows/GaleKart.exe`。导出方法见下文「开发」。
+- **直接玩（不需要装 Godot）**：到 GitHub 的 Releases 页面下载 macOS（Intel / Apple 芯片通用）或 Windows 版。也可以按下文「开发」自己导出。
 - **从源码运行**：安装 Godot 4.7（`brew install --cask godot`）后双击 `开始游戏.command`，或在终端运行 `godot --path .`，也可以用 Godot 编辑器打开项目后按 F5。
-- 每台电脑**第一次**进入比赛时要编译着色器，前几十秒可能会卡顿，之后就流畅了（只会发生一次）。
+- 每台电脑**第一次**启动时要编译 3D 着色器（Intel Mac 上约 40 秒），期间会显示「正在准备 3D 图形」，之后启动就很快了。
 
 ## 内容
 
@@ -61,11 +61,18 @@ godot --path . -- --menu=setup --shots=2 --out=/tmp/shots --quit-after=3
 godot --path . -- --flow=gp
 godot --path . --fixed-fps 60 -s tests/tools/fx_gallery.gd -- --out=/tmp/fx   # 特效画廊
 
-# 导出（需要先安装 4.7.2 导出模板）
+# 导出（需要先安装 4.7.2 导出模板；不要加 --headless，否则不会预烘焙着色器）
 godot --path . --export-release "macOS" build/macos/GaleKart.zip
 godot --path . --export-release "Windows" build/windows/GaleKart.exe
 ```
 
-素材：模型来自 Kenney（CC0，见 `assets/models/LICENSE-Kenney.txt`），字体 ZCOOL KuaiLe 与 Bungee（OFL，见 `assets/fonts/`），音效与音乐由 `tools/gen_audio.py` 合成。
+## 许可与素材
+
+- 代码：MIT，见 `LICENSE`。
+- 模型：Kenney（CC0，见 `assets/models/LICENSE-Kenney.txt`）。
+- 字体：ZCOOL KuaiLe 与 Bungee（OFL，见 `assets/fonts/`）。
+- 音效与音乐：由 `tools/gen_audio.py` 离线合成。
+- 界面插画、图标、Logo、赛道插画、广告牌等：用 AI 图像模型（GPT Image）生成后加工。
+- 作者头像与个人推广素材（`assets/ui/creator/`、`assets/textures/ads/*creator*`）不在 MIT 授权范围内。
 
 结构：`src/sim/` 是与渲染无关的仿真层（120 Hz 固定子步，可无界面运行，移植自网页版参考实现），`src/view/` 是 3D 表现层，`src/race/` 是比赛总控、事件分发与回放，`src/ui/` 是 HUD 与菜单，`src/autoload/` 是全局流程、存档、音频。设计文档见 `docs/superpowers/specs/2026-09-26-gale-kart-godot-design.md`。

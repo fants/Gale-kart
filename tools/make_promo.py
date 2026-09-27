@@ -1,20 +1,18 @@
-"""作者推广素材：圆形头像、吉祥物「铂金小鸟」抠图、赛道广告牌与起点横幅（在插画上用游戏字体写「bilibili @名字」）。
+"""作者推广素材：赛道广告牌与起点横幅（在插画上用游戏字体写「bilibili @名字」）。
 
-名字从 src/data/credits.gd 的 NAME 读取，改名后重新运行即可。
-插画原图（GPT Image 生成）在 assets/branding/promo_src/（有 .gdignore，不打进游戏包）：
-avatar_src.png（作者头像原图，按 AVATAR_CIRCLE 裁成圆形）、mascot.png、mascot_wave.png（绿幕）、board_1.png、board_2.png。
+名字从 src/data/credits.gd 的 NAME 读取；头像用游戏里的圆形头像 assets/ui/creator/avatar.png。
+- 起点横幅只需要头像，随时可以重新生成。
+- 两块广告牌的背景插画（GPT Image 生成的 board_1.png、board_2.png）不放在仓库里；
+  给出插画目录时才重新生成广告牌，否则保留仓库里现有的广告牌贴图。
 
-用法：python3 tools/make_promo.py [原图目录]
+用法：python3 tools/make_promo.py [广告牌插画目录]
 """
 
 import re
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from key_icons import fit_square, key_green  # noqa: E402
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 FONT_CN = str(ROOT / "assets/fonts/ZCOOLKuaiLe-Regular.ttf")
@@ -24,9 +22,7 @@ INK = (27, 31, 59)
 PINK = (251, 114, 153)
 BLUE = (0, 174, 236)
 WHITE = (255, 255, 255)
-## 头像原图里圆形裁切的圆心与半径（像素）：整只小鸟都在圆里；超出原图的部分用原图底色补，
-## 左下角的图库水印落在圆外
-AVATAR_CIRCLE = (266, 242, 282)
+AVATAR = ROOT / "assets/ui/creator/avatar.png"
 
 
 def creator_name() -> str:
@@ -45,26 +41,6 @@ def text(d: ImageDraw.ImageDraw, xy, s: str, font, fill, stroke, sw: int, anchor
     if shadow:
         d.text((xy[0], xy[1] + sw * 0.9), s, font=font, fill=shadow, stroke_width=sw, stroke_fill=shadow, anchor=anchor)
     d.text(xy, s, font=font, fill=fill, stroke_width=sw, stroke_fill=stroke, anchor=anchor)
-
-
-def round_avatar(src: Image.Image, size: int) -> Image.Image:
-    """圆形头像：原图按 AVATAR_CIRCLE 裁圆，外面一圈白边 + 一圈品牌粉（4 倍超采样抗锯齿）"""
-    cx, cy, r = AVATAR_CIRCLE
-    big = size * 4
-    rgb = src.convert("RGB")
-    pad = Image.new("RGB", (2 * r, 2 * r), rgb.getpixel((6, 6)))
-    pad.paste(rgb, (r - cx, r - cy))
-    face = pad.resize((big, big), Image.LANCZOS)
-    out = Image.new("RGBA", (big, big), (0, 0, 0, 0))
-    d = ImageDraw.Draw(out)
-    pink_w, white_w = big * 0.03, big * 0.035
-    d.ellipse((0, 0, big - 1, big - 1), fill=(*PINK, 255))
-    d.ellipse((pink_w, pink_w, big - 1 - pink_w, big - 1 - pink_w), fill=(*WHITE, 255))
-    inner = pink_w + white_w
-    mask = Image.new("L", (big, big), 0)
-    ImageDraw.Draw(mask).ellipse((inner, inner, big - 1 - inner, big - 1 - inner), fill=255)
-    out.paste(face, (0, 0), mask)
-    return out.resize((size, size), Image.LANCZOS)
 
 
 SUBTITLES = {"": "关注我 · 看更多赛车视频！", "_en": "Follow me for more racing videos!"}
@@ -134,23 +110,22 @@ def banner(avatar: Image.Image, name: str) -> Image.Image:
 
 
 def main() -> None:
-    src = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets/branding/promo_src"
     name = creator_name()
-    out_ui = ROOT / "assets/ui/creator"
-    out_ui.mkdir(parents=True, exist_ok=True)
-    avatar = round_avatar(Image.open(src / "avatar_src.png"), 512)
-    avatar.resize((256, 256), Image.LANCZOS).save(out_ui / "avatar.png")
-    mascot = key_green(Image.open(src / "mascot.png"))
-    fit_square(mascot, 256).save(out_ui / "mascot.png")
+    avatar = Image.open(AVATAR).convert("RGBA").resize((512, 512), Image.LANCZOS)
     ads = ROOT / "assets/textures/ads"
-    # 中文版与英文版（副标题不同）
-    for suffix, sub in SUBTITLES.items():
-        board(Image.open(src / "board_2.png"), name, 0.36, avatar, sub).resize((1024, 512), Image.LANCZOS).save(ads / f"ad_creator{suffix}.jpg", quality=90)
-        board(Image.open(src / "board_1.png"), name, 0.64, avatar, sub).resize((1024, 512), Image.LANCZOS).save(ads / f"ad_creator_2{suffix}.jpg", quality=90)
+    out = ["assets/textures/ads/banner_creator.jpg"]
     banner(avatar, name).resize((1024, 342), Image.LANCZOS).save(ads / "banner_creator.jpg", quality=90)
+    if len(sys.argv) > 1:
+        src = Path(sys.argv[1])
+        # 中文版与英文版（副标题不同）
+        for suffix, sub in SUBTITLES.items():
+            board(Image.open(src / "board_2.png"), name, 0.36, avatar, sub).resize((1024, 512), Image.LANCZOS).save(ads / f"ad_creator{suffix}.jpg", quality=90)
+            board(Image.open(src / "board_1.png"), name, 0.64, avatar, sub).resize((1024, 512), Image.LANCZOS).save(ads / f"ad_creator_2{suffix}.jpg", quality=90)
+            out += [f"assets/textures/ads/ad_creator{suffix}.jpg", f"assets/textures/ads/ad_creator_2{suffix}.jpg"]
+    else:
+        print("（没有给广告牌插画目录，只重新生成起点横幅）")
     print("作者：bilibili @" + name)
-    for p in ["assets/ui/creator/avatar.png", "assets/ui/creator/mascot.png", "assets/textures/ads/ad_creator.jpg", "assets/textures/ads/ad_creator_2.jpg",
-              "assets/textures/ads/ad_creator_en.jpg", "assets/textures/ads/ad_creator_2_en.jpg", "assets/textures/ads/banner_creator.jpg"]:
+    for p in out:
         print(" ", p)
 
 
