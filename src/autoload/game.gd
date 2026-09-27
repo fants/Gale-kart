@@ -50,9 +50,11 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_apply_language()
 	_apply_display_settings()
-	# 项目默认用兼容渲染器秒开：这时只显示「正在准备 3D 图形」，由它以 Forward+ 启动游戏本体（见 FirstLaunch）
+	# 项目默认用兼容渲染器秒开：这时只显示「正在准备 3D 图形」，由它以 Forward+ 启动游戏本体（见 FirstLaunch）。
+	# 本体（--child）无论如何都不再当启动器：显卡不支持 Forward+ 时引擎会退回兼容渲染器，否则会一直套娃开进程
 	if DisplayServer.get_name() != "headless":
-		if RenderingServer.get_current_rendering_method() == "gl_compatibility" and not args.has("compat"):
+		var compat := RenderingServer.get_current_rendering_method() == "gl_compatibility"
+		if compat and not args.has("compat") and not args.has("child") and not ProjectSettings.get_setting(COMPAT_ONLY, false):
 			launcher = true
 		else:
 			_mark_graphics_ready()
@@ -82,14 +84,23 @@ func _apply_display_settings() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 
-## Forward+ 已经初始化完（着色器编译好了）：记下来，之后直接用 Forward+ 启动；窗口提到最前
+## 写进 graphics.cfg 的标记：这台电脑用不了 Forward+，以后直接用兼容渲染器玩，不再走启动提示
+const COMPAT_ONLY := "gale/compat_only"
+
+
+## Forward+ 已经初始化完（着色器编译好了）：记下来，之后直接用 Forward+ 启动；窗口提到最前。
+## 以 Forward+ 启动的本体却被引擎退回了兼容渲染器：记下「只能用兼容渲染器」，照样开始游戏
 func _mark_graphics_ready() -> void:
-	if RenderingServer.get_current_rendering_method() != "forward_plus":
+	var method := RenderingServer.get_current_rendering_method()
+	var fell_back := method == "gl_compatibility" and args.has("child")
+	if method != "forward_plus" and not fell_back:
 		return
 	if args.has("startup-time"):
-		print("[启动] Forward+ 就绪于引擎启动后 %d ms" % Time.get_ticks_msec())
+		print("[启动] %s 就绪于引擎启动后 %d ms" % [method, Time.get_ticks_msec()])
 	var cf := ConfigFile.new()
-	cf.set_value("rendering", "renderer/rendering_method", "forward_plus")
+	cf.set_value("rendering", "renderer/rendering_method", method)
+	if fell_back:
+		cf.set_value("gale", "compat_only", true)
 	cf.save(FirstLaunch.GRAPHICS_CFG)
 	DisplayServer.window_move_to_foreground()
 

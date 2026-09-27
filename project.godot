@@ -13,11 +13,11 @@ config_version=5
 config/name="疾风卡丁 GALE KART"
 config/description="仿跑跑卡丁车的 3D 卡丁车竞速游戏"
 run/main_scene="res://scenes/main.tscn"
+config/project_settings_override="user://graphics.cfg"
 config/features=PackedStringArray("4.7", "Forward Plus")
 boot_splash/bg_color=Color(0.105882, 0.121569, 0.231373, 1)
 boot_splash/show_image=false
 config/icon="res://assets/icon.png"
-config/project_settings_override="user://graphics.cfg"
 
 [autoload]
 
@@ -38,17 +38,16 @@ window/stretch/aspect="expand"
 
 theme/custom_font="res://assets/fonts/ZCOOLKuaiLe-Regular.ttf"
 
+[internationalization]
+
+locale/fallback="zh_CN"
+
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
 textures/canvas_textures/default_texture_filter=3
-
+renderer/rendering_method="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
 anti_aliasing/quality/msaa_3d=1
 environment/defaults/default_clear_color=Color(0.105882, 0.121569, 0.231373, 1)
 anti_aliasing/quality/screen_space_aa=1
-
-[internationalization]
-
-locale/fallback="zh_CN"

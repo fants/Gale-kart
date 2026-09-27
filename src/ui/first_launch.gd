@@ -5,6 +5,8 @@ extends CanvasLayer
 ## 这里显示「正在准备 3D 图形」，同时以 Forward+ 启动游戏本体（子进程）；
 ## 本体初始化完成后会写 user://graphics.cfg（GRAPHICS_CFG），这边看到后关闭自己。
 ## 之后的启动读到 graphics.cfg 直接用 Forward+，不再经过这里。
+## 显卡不支持 Forward+ 时引擎会让本体退回兼容渲染器，本体会在 graphics.cfg 里记下 gale/compat_only，
+## 这边同样看到文件更新后退出，以后也直接用兼容渲染器启动。
 
 const GRAPHICS_CFG := "user://graphics.cfg"
 const POLL := 0.25
@@ -37,11 +39,10 @@ func _spawn() -> void:
 		if a.begins_with("-psn_") or a == "--rendering-method" or a == "forward_plus" or a == "gl_compatibility":
 			continue
 		args.append(a)
-	args.append_array(["--rendering-method", "forward_plus"])
-	var user := OS.get_cmdline_user_args()
-	if not user.is_empty():
-		args.append("--")
-		args.append_array(user)
+	args.append_array(["--rendering-method", "forward_plus", "--"])
+	args.append_array(OS.get_cmdline_user_args())
+	# 标明是本体：即使引擎退回兼容渲染器也不会再当启动器（见 Game._ready）
+	args.append("--child")
 	_pid = OS.create_process(OS.get_executable_path(), args)
 	if _pid <= 0:
 		_fail()
