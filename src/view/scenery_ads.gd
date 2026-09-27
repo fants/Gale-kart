@@ -115,7 +115,7 @@ static func _billboards(s: Scenery, night: bool) -> void:
 		fm.mesh = face_mesh
 		var ad := ids[placed % ids.size()]
 		if placed % 4 == 0:
-			ad = CREATOR[(placed / 4) % CREATOR.size()]
+			ad = CREATOR[(placed / 4) % CREATOR.size()] + ("_en" if Loc.is_en() else "")
 		fm.material_override = _mat(ad, night, cache)
 		fm.position = Vector3(0, cy, 0.05)
 		fm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

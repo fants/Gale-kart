@@ -56,7 +56,7 @@ func setup(p_kart: KartSim, opts := {}) -> void:
 
 	if opts.get("show_name", false):
 		name_tag = Label3D.new()
-		name_tag.text = kart.name
+		name_tag.text = Loc.t(kart.name)
 		name_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		name_tag.fixed_size = false
 		name_tag.pixel_size = 0.0042

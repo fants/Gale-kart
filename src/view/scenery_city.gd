@@ -13,6 +13,17 @@ const FAR_KINDS := ["low-detail-building-a", "low-detail-building-b", "low-detai
 	"low-detail-building-h", "low-detail-building-j", "low-detail-building-l", "low-detail-building-wide-a", "low-detail-building-wide-b"]
 const WORDS := ["疾风", "GALE", "KART", "24H", "拉面", "夜市", "电玩", "奶茶", "烧烤", "极速", "霓虹", "漂移", "HOTEL", "咖啡", "冲刺", "BAR"]
 const VERTICAL := ["拉面", "夜市", "电玩", "奶茶", "烧烤", "咖啡"]
+## 英文界面的招牌文字（顺序与中文一一对应，竖排的也是短词）
+const WORDS_EN := ["GALE", "GALE", "KART", "24H", "RAMEN", "BAR", "ARCADE", "BOBA", "BBQ", "TURBO", "NEON", "DRIFT", "HOTEL", "CAFE", "NITRO", "BAR"]
+const VERTICAL_EN := ["RAMEN", "BAR", "GAME", "BOBA", "BBQ", "CAFE"]
+
+
+static func _words() -> Array:
+	return WORDS_EN if Loc.is_en() else WORDS
+
+
+static func _vertical() -> Array:
+	return VERTICAL_EN if Loc.is_en() else VERTICAL
 const NEON := ["#3EC6FF", "#FF4DC4", "#FFC93C", "#45E3A6", "#B98CFF", "#FF6B6B"]
 ## 灯光池大小（路灯）+ 立交桥下的固定彩灯，合计不超过 20 盏
 const LAMP_POOL := 16
@@ -167,8 +178,8 @@ static func _neon_signs(s: Scenery, street: Array[Dictionary], mats: Array[Stand
 		var bld: Dictionary = street[i]
 		if s.rng.randf() > 0.75:
 			continue
-		var word: String = WORDS[i % WORDS.size()]
-		var vertical := word in VERTICAL and s.rng.randf() < 0.7
+		var word: String = _words()[i % WORDS.size()]
+		var vertical := word in _vertical() and s.rng.randf() < 0.7
 		var h: float = bld["h"]
 		var y := clampf(s.rf(5.0, 10.0), 4.0, maxf(4.0, h - 5.0))
 		var yaw: float = bld["yaw"]
@@ -201,8 +212,8 @@ static func _neon_pylons(s: Scenery, mats: Array[StandardMaterial3D], parts: Arr
 			continue
 		s.placer.mark(p.x, p.z, 1.5)
 		var g := s.terrain.height_at(p.x, p.z)
-		var word: String = VERTICAL[j % VERTICAL.size()] if j % 3 != 0 else WORDS[(j * 5) % WORDS.size()]
-		var vertical := word.unicode_at(0) >= 128
+		var word: String = _vertical()[j % VERTICAL.size()] if j % 3 != 0 else _words()[(j * 5) % WORDS.size()]
+		var vertical := word in _vertical()
 		# 面向来车：朝赛道并偏向后方（来车方向 = 赛道切线反方向）
 		var dir := Vector3(-t.nx[i] * sd, 0, -t.nz[i] * sd) * 0.75 - Vector3(t.tx[i], 0, t.tz[i]) * 0.65
 		var yaw := atan2(dir.x, dir.z)

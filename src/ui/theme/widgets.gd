@@ -120,8 +120,9 @@ class ToggleSwitch extends PopButton:
 		draw_circle(c, h / 2.0 - 7.0, UiTheme.WHITE)
 		draw_arc(c, h / 2.0 - 7.0, 0.0, TAU, 40, INK, 3.0, true)
 		var f := UiTheme.font_cn()
-		var txt := "开" if button_pressed else "关"
-		var tx := r.position.x + 14.0 if button_pressed else r.end.x - 38.0
+		var txt := Loc.t("开" if button_pressed else "关")
+		var tw := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
+		var tx := r.position.x + 14.0 if button_pressed else r.end.x - 14.0 - tw
 		draw_string(f, Vector2(tx, c.y + 9.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color(INK, 0.75))
 
 
@@ -177,7 +178,7 @@ class StatBar extends Control:
 	func _draw() -> void:
 		var f := UiTheme.font_cn()
 		var h := size.y
-		draw_string(f, Vector2(0, h / 2.0 + 9.0), label, HORIZONTAL_ALIGNMENT_LEFT, label_w, 24, UiTheme.INK_2)
+		draw_string(f, Vector2(0, h / 2.0 + 9.0), Loc.t(label), HORIZONTAL_ALIGNMENT_LEFT, label_w, 24, UiTheme.INK_2)
 		var x0 := label_w
 		var num_w := 34.0
 		var gap := 6.0

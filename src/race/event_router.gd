@@ -172,7 +172,7 @@ func handle(events: Array[Dictionary]) -> void:
 						"dizzy": hud.sub("被雷暴击晕！", Color("#FFE14A"))
 					ctl.vibrate(0.6, 0.8, 0.4)
 				elif src == p and src != null and not replay:
-					hud.sub("命中 %s！" % k.name, Color("#45E3A6"))
+					hud.sub(Loc.t("命中 %s！") % Loc.t(k.name), Color("#45E3A6"))
 			"shield":
 				fx.burst("shield", _kpos(k))
 				_sfx_at("shield", _kpos(k), {"range": 60.0})
@@ -189,7 +189,7 @@ func handle(events: Array[Dictionary]) -> void:
 					AudioMgr.play("cloud")
 				elif src2 == p:
 					if not replay:
-						hud.sub("乌云飘向 %s" % k.name)
+						hud.sub(Loc.t("乌云飘向 %s") % Loc.t(k.name))
 					AudioMgr.play("cloud", {"volume": 0.5})
 			"ufo":
 				var src3: KartSim = e.get("source")
@@ -199,7 +199,7 @@ func handle(events: Array[Dictionary]) -> void:
 					AudioMgr.play("ufo")
 				elif src3 == p:
 					if not replay:
-						hud.sub("飞碟飞向 %s" % k.name)
+						hud.sub(Loc.t("飞碟飞向 %s") % Loc.t(k.name))
 					AudioMgr.play("ufo", {"volume": 0.5})
 			"thunder":
 				if not replay:
@@ -222,7 +222,7 @@ func handle(events: Array[Dictionary]) -> void:
 						AudioMgr.play("final_lap")
 						AudioMgr.set_music_tempo(1.06)
 					else:
-						hud.sub("第 %d 圈  %s" % [e["lap"], MathX.format_time(e["time"])])
+						hud.sub(Loc.t("第 %d 圈  %s") % [e["lap"], MathX.format_time(e["time"])])
 						AudioMgr.play("lap")
 			"finish":
 				if me and not replay:

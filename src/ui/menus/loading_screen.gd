@@ -99,13 +99,13 @@ func setup(sel: Dictionary, gp: Dictionary) -> void:
 	var mode_name: String = {"speed": "竞速赛", "item": "道具赛", "time": "计时赛"}.get(mode, "竞速赛")
 	if not gp.is_empty():
 		var tracks: Array = gp["tracks"]
-		badges.add_child(Widgets.badge("%s · 第 %d / %d 场" % [gp["cup_name"], int(gp["index"]) + 1, tracks.size()], UiTheme.SUN, 26))
+		badges.add_child(Widgets.badge(Loc.t("%s · 第 %d / %d 场") % [Loc.t(str(gp["cup_name"])), int(gp["index"]) + 1, tracks.size()], UiTheme.SUN, 26))
 	badges.add_child(Widgets.badge(mode_name, UiTheme.BUBBLE if mode == "speed" else (UiTheme.PINK if mode == "item" else UiTheme.MINT), 26))
-	badges.add_child(Widgets.badge("%d 圈" % int(sel.get("laps", 3)), UiTheme.WHITE, 26))
+	badges.add_child(Widgets.badge(Loc.t("%d 圈") % int(sel.get("laps", 3)), UiTheme.WHITE, 26))
 	var name_l := Widgets.title(str(def["name"]), 128, UiTheme.SUN, false, 18)
 	name_l.add_theme_constant_override("shadow_offset_y", 11)
 	left.add_child(name_l)
-	var en := Widgets.title(str(def["en"]), 46, UiTheme.CLOUD, true, 10)
+	var en := Widgets.title("" if Loc.is_en() else str(def["en"]), 46, UiTheme.CLOUD, true, 10)
 	left.add_child(en)
 	var stars_row := HBoxContainer.new()
 	stars_row.add_theme_constant_override("separation", 14)
@@ -163,7 +163,7 @@ func setup(sel: Dictionary, gp: Dictionary) -> void:
 	trow.add_child(tb)
 	var tip_text := TIPS[randi() % TIPS.size()]
 	if randf() < 0.25:
-		tip_text = "关注 %s，看更多疾风卡丁的比赛视频！" % Credits.tag()
+		tip_text = Loc.t("关注 %s，看更多疾风卡丁的比赛视频！") % Credits.tag()
 	var tl := Widgets.label(tip_text, 30)
 	tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL

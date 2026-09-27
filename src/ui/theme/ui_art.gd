@@ -15,7 +15,12 @@ static func _load(path: String) -> Texture2D:
 	return _cache[path]
 
 
+## 中文界面用「疾风卡丁 GALE KART」，英文界面用「GALE KART」
 static func logo() -> Texture2D:
+	if Loc.is_en():
+		var en := _load("res://assets/ui/logo_en.png")
+		if en != null:
+			return en
 	return _load("res://assets/ui/logo.png")
 
 

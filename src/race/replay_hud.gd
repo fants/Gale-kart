@@ -97,7 +97,7 @@ func update_view(progress: float, focus: KartSim, cam_name: String, speed: float
 	_rec.text = "❚❚ PAUSED" if paused else "● REPLAY"
 	_mode.text = "%s   ×%s" % [cam_name, str(speed) if speed != int(speed) else str(int(speed))]
 	if focus:
-		_info.text = "%s · 第 %d 名 · %d km/h" % [focus.name, focus.rank, int(focus.speed * 3.6 * 1.4)]
+		_info.text = Loc.t("%s · 第 %d 名 · %d km/h") % [Loc.t(focus.name), focus.rank, int(focus.speed * 3.6 * 1.4)]
 	_bar.size = Vector2(_bar_bg.size.x * clampf(progress, 0.0, 1.0), 4)
 
 

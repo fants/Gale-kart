@@ -213,7 +213,7 @@ func setup(rows: Array, solo := false) -> void:
 		tag.set_meta("name_tag", true)
 		var is_p: bool = r.get("is_player", false)
 		var ch := KartsData.character_by_id(str(r.get("character_id", "")))
-		tag.text = ("%s（你）" % ch["name"]) if is_p else str(ch["name"])
+		tag.text = (Loc.t("%s（你）") % Loc.name_of(ch)) if is_p else Loc.name_of(ch)
 		tag.font = UiTheme.font_cn()
 		tag.font_size = 96
 		tag.pixel_size = 0.0042

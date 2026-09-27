@@ -133,11 +133,31 @@ func _make(page_name: String, params: Dictionary) -> MenuPage:
 			push_error("未知页面：%s" % page_name)
 			page = MainMenu.new()
 	page.name = page_name.capitalize().replace(" ", "")
+	page.set_meta("page_name", page_name)
 	page.root = self
 	page.params = params
 	holder.add_child(page)
 	page.build()
 	return page
+
+
+## 重建整个页面栈（切换语言后，拼接出来的文字要重新生成），停留在原来的页面
+func reload() -> void:
+	var specs: Array = []
+	for p in stack:
+		specs.append([str(p.get_meta("page_name", "main")), p.params])
+	for p in stack:
+		p.queue_free()
+	stack.clear()
+	for i in specs.size():
+		var pg := _make(specs[i][0], specs[i][1])
+		pg.set_meta("entered", true)
+		pg.visible = i == specs.size() - 1
+		stack.append(pg)
+	var top := current()
+	top.modulate.a = 1.0
+	_apply_stage(top)
+	focus_default()
 
 
 ## 转场：旧页面滑出淡出，新页面滑入淡入；dir = 1 前进，-1 后退

@@ -127,7 +127,7 @@ func _refresh_ride() -> void:
 	var kd := KartsData.kart_by_id(str(s.get("kart_id", "")))
 	var pt := KartsData.paint_by_id(str(s.get("paint_id", "")))
 	_ride_name.text = str(ch["name"])
-	_ride_kart.text = "%s · %s涂装" % [kd["name"], pt["name"]]
+	_ride_kart.text = Loc.t("%s · %s涂装") % [Loc.name_of(kd), Loc.name_of(pt)]
 	_ride_dot.queue_free()
 	_ride_dot = Widgets.dot(Color(str(ch["color"])), 26)
 	_ride_dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER

@@ -9,6 +9,9 @@ var _pct: Dictionary = {}
 func _init() -> void:
 	add_theme_constant_override("separation", 10)
 	var s := Store.settings
+	_row("语言", "跟随系统：简体中文系统显示中文，其余英文", "globe", UiTheme.BUBBLE,
+		Widgets.segmented([["auto", "自动"], ["zh", "中文"], ["en", "English"]], str(s.get("language", "auto")),
+			func(v: Variant) -> void: Game.apply_settings({"language": str(v)}), 120.0))
 	_slider_row("音乐音量", "music", "music", float(s["music"]), UiTheme.PINK)
 	_slider_row("音效音量", "speaker", "sfx", float(s["sfx"]), UiTheme.BUBBLE)
 	_row("画质", "低画质更流畅；下一场比赛生效", "monitor", UiTheme.BUBBLE,

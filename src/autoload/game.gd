@@ -46,7 +46,13 @@ func _ready() -> void:
 			var kv := a.substr(2).split("=", true, 1)
 			args[kv[0]] = kv[1] if kv.size() > 1 else "true"
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_apply_language()
 	_apply_display_settings()
+
+
+## 语言：设置里的 language，调试时可用 --lang=zh / en 覆盖
+func _apply_language() -> void:
+	Loc.apply(str(args.get("lang", Store.settings.get("language", "auto"))))
 
 
 func _apply_display_settings() -> void:
@@ -75,6 +81,7 @@ func boot(main_node: Node) -> void:
 	if args.has("race") or args.has("menu") or args.has("flow"):
 		Store.save_path = "user://demo_save.json"
 		Store.load_from_disk()
+		_apply_language()
 	if args.has("race"):
 		var sel := Store.selection.duplicate()
 		sel["track_id"] = args["race"]
@@ -290,6 +297,11 @@ func apply_settings(patch: Dictionary) -> void:
 			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if bool(s["vsync"]) else DisplayServer.VSYNC_DISABLED)
 	if patch.has("camera") and race_ctl and race_ctl.rig:
 		race_ctl.rig.far = str(s["camera"]) != "near"
+	if patch.has("language"):
+		_apply_language()
+		# 拼接出来的文字要重建页面才会换语言（静态文字自动切换；暂停菜单里的徽章下次打开时更新）
+		if menu:
+			menu.reload.call_deferred()
 
 
 func _input(ev: InputEvent) -> void:
@@ -563,6 +575,7 @@ func _demo_gp(races: int) -> void:
 ##   garage：车库页在预览区按住鼠标左右拖动，检查转台旋转与松手惯性
 ##   records：最佳纪录页按下键滚动，检查能滚到底
 ##   replay：跑一场 → 结算 → 精彩回放
+##   lang：设置页里切换中文 / 英文，页面即时重建
 func _boot_flow() -> void:
 	args["autopilot"] = "true"
 	Store.selection["laps"] = 1
@@ -571,6 +584,16 @@ func _boot_flow() -> void:
 	var sel := Store.selection.duplicate()
 	var which := str(args.get("flow", "smoke"))
 	match which:
+		"lang":
+			# 设置页里切换语言：中文 → English → 中文，页面即时重建
+			goto_menu("settings")
+			_flow = [
+				[0.1, "wait_page", "SettingsScreen"], [0.8, "shot", "lang_zh"],
+				[0.1, "set_lang", "en"], [0.8, "check", "lang_en"], [0.1, "shot", "lang_en"],
+				[0.1, "key", KEY_ESCAPE], [0.8, "shot", "lang_en_main"],
+				[0.1, "set_lang", "zh"], [0.8, "check", "lang_zh"], [0.1, "shot", "lang_zh_main"],
+				[0.1, "set_lang", "auto"], [0.3, "done"],
+			]
 		"records":
 			# 最佳纪录：列表可滚动，按下键滚到底能看到大奖赛
 			goto_menu("records")
@@ -706,6 +729,9 @@ func _flow_step(dt: float) -> void:
 			if menu == null or not (menu.current() is ResultsScreen):
 				return
 			print("流程冒烟：结算页已显示")
+		"set_lang":
+			apply_settings({"language": str(step[2])})
+			print("流程冒烟：切换语言 %s" % str(step[2]))
 		"play_replay":
 			var rs := menu.current() as ResultsScreen if menu else null
 			var rep: Dictionary = rs.summary.get("replay", {}) if rs else {}
@@ -739,6 +765,12 @@ func _flow_step(dt: float) -> void:
 						_flow_fail("应已继续比赛")
 						return
 					print("流程冒烟：已继续比赛")
+				"lang_en", "lang_zh":
+					var want_en := what == "lang_en"
+					if Loc.is_en() != want_en or TranslationServer.translate("设置") != ("Settings" if want_en else "设置"):
+						_flow_fail("语言没有切换过去（%s）" % Loc.lang)
+						return
+					print("流程冒烟：当前语言 %s，页面 %s" % [Loc.lang, menu.current().name if menu and menu.current() else "?"])
 				"records_scrolled":
 					var rs := menu.current() as RecordsScreen if menu else null
 					var sb := rs._scroll.get_v_scroll_bar() if rs else null

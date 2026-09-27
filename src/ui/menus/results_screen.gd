@@ -49,22 +49,25 @@ func build() -> void:
 	tcol.alignment = BoxContainer.ALIGNMENT_CENTER
 	tcol.add_theme_constant_override("separation", 4)
 	hrow.add_child(tcol)
-	var title_text := "完成挑战！" if solo else (TITLES[rank - 1] if rank >= 1 and rank <= 3 else "第 %d 名" % rank)
+	var title_text := "完成挑战！" if solo else (TITLES[rank - 1] if rank >= 1 and rank <= 3 else Loc.t("第 %d 名") % rank)
 	tcol.add_child(Widgets.title(title_text, 92, UiTheme.SUN if (solo or rank <= 3) else UiTheme.CLOUD, false, 16))
-	var sub := "%s · %s · %d 圈" % [MODE_NAMES.get(mode, "竞速赛"), summary.get("track_name", ""), int(summary.get("laps", 3))]
+	var sub := Loc.t("%s · %s · %d 圈") % [Loc.t(MODE_NAMES.get(mode, "竞速赛")), Loc.t(str(summary.get("track_name", ""))), int(summary.get("laps", 3))]
 	if in_gp:
 		var tracks: Array = Game.gp["tracks"]
-		sub = "%s 第 %d / %d 场 · %s" % [Game.gp["cup_name"], int(Game.gp["index"]) + 1, tracks.size(), sub]
+		sub = Loc.t("%s 第 %d / %d 场 · %s") % [Loc.t(str(Game.gp["cup_name"])), int(Game.gp["index"]) + 1, tracks.size(), sub]
 	var sl := Widgets.label(sub, 30, UiTheme.INK)
+	# 左栏宽度有限（右边是成绩表）：太长就换行
+	sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sl.custom_minimum_size = Vector2(700, 0)
 	sl.add_theme_color_override("font_outline_color", UiTheme.CLOUD)
 	sl.add_theme_constant_override("outline_size", 10)
 	tcol.add_child(sl)
 	var badges := HBoxContainer.new()
 	badges.add_theme_constant_override("separation", 12)
 	head.add_child(badges)
-	badges.add_child(Widgets.badge("总用时  %s" % MathX.format_time(float(summary.get("total", -1.0))), UiTheme.WHITE, 26))
+	badges.add_child(Widgets.badge(Loc.t("总用时  %s") % MathX.format_time(float(summary.get("total", -1.0))), UiTheme.WHITE, 26))
 	var bl: float = summary.get("best_lap", INF)
-	badges.add_child(Widgets.badge("最快单圈  %s" % (MathX.format_time(bl) if is_finite(bl) else "—"), UiTheme.WHITE, 26))
+	badges.add_child(Widgets.badge(Loc.t("最快单圈  %s") % (MathX.format_time(bl) if is_finite(bl) else "—"), UiTheme.WHITE, 26))
 	var badges2 := HBoxContainer.new()
 	badges2.add_theme_constant_override("separation", 12)
 	head.add_child(badges2)
@@ -77,14 +80,14 @@ func build() -> void:
 	if mode == "time" and ghost > 0.0:
 		var diff := float(summary.get("total", 0.0)) - ghost
 		if diff <= 0.0:
-			badges2.add_child(Widgets.badge("比幽灵车快 %.3f 秒" % absf(diff), UiTheme.MINT, 26))
+			badges2.add_child(Widgets.badge(Loc.t("比幽灵车快 %.3f 秒") % absf(diff), UiTheme.MINT, 26))
 		else:
-			badges2.add_child(Widgets.badge("比幽灵车慢 %.3f 秒" % diff, Color("#FFB3BC"), 26))
+			badges2.add_child(Widgets.badge(Loc.t("比幽灵车慢 %.3f 秒") % diff, Color("#FFB3BC"), 26))
 	elif mode == "time":
 		badges2.add_child(Widgets.badge("已保存为幽灵车", UiTheme.MINT, 26))
 	if in_gp:
 		var gain: int = (Game.gp["gains"] as Dictionary).get(_player_cid(), 0)
-		badges2.add_child(Widgets.badge("本场积分 +%d" % gain, UiTheme.MINT, 26))
+		badges2.add_child(Widgets.badge(Loc.t("本场积分 +%d") % gain, UiTheme.MINT, 26))
 
 	# ———— 右侧：成绩表 + 按钮 ————
 	var panel := Widgets.panel()
@@ -225,14 +228,14 @@ func _row(r: Dictionary, ghost := false) -> Control:
 		av.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		who.add_child(av)
 		var ch := KartsData.character_by_id(cid)
-		var nm := ("%s（你）" % ch["name"]) if is_p else str(r.get("name", ch["name"]))
+		var nm := (Loc.t("%s（你）") % Loc.name_of(ch)) if is_p else Loc.t(str(r.get("name", ch["name"])))
 		var nl := Widgets.label(nm, 28)
 		nl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		who.add_child(nl)
 	else:
 		var gi := Widgets.Icon.new("eye", 50.0, UiTheme.MINT)
 		who.add_child(gi)
-		var nl2 := Widgets.label(str(r.get("name", "")), 28)
+		var nl2 := Widgets.label(Loc.t(str(r.get("name", ""))), 28)
 		nl2.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		who.add_child(nl2)
 	var kart := HBoxContainer.new()
@@ -244,12 +247,12 @@ func _row(r: Dictionary, ghost := false) -> Control:
 		var d := Widgets.dot(Color(str(KartsData.paint_by_id(pid)["color"])), 20.0)
 		d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		kart.add_child(d)
-	var kl := Widgets.label(str(r.get("kart_name", "")), 24, UiTheme.INK_2)
+	var kl := Widgets.label(Loc.t(str(r.get("kart_name", ""))), 24, UiTheme.INK_2)
 	kl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	kart.add_child(kl)
 	var t: float = r.get("time", -1.0)
 	var est: bool = r.get("estimated", false)
-	var tl := Widgets.label(("约 " if est else "") + MathX.format_time(t), 26, UiTheme.INK_2 if est else UiTheme.INK, not est)
+	var tl := Widgets.label((Loc.t("约 ") if est else "") + MathX.format_time(t), 26, UiTheme.INK_2 if est else UiTheme.INK, not est)
 	if est:
 		tl.add_theme_font_override("font", UiTheme.font_cn())
 	tl.custom_minimum_size = Vector2(COLS[3], 0)

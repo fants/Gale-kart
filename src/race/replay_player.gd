@@ -81,7 +81,7 @@ func start(p_data: Dictionary, quality := "high") -> void:
 	router.replay = true
 	overlay = ReplayHud.new()
 	add_child(overlay)
-	overlay.setup(track.name)
+	overlay.setup(Loc.t(track.name))
 	EnvironmentFactory.apply_viewport_quality(get_viewport(), quality)
 
 	duration = (data["frames"] as Array).size() / float(data["rate"])
@@ -194,7 +194,7 @@ func _process(dt: float) -> void:
 		ContinuousFx.emit(effects, kart_views, cam_pos, track.grip < 1.0, vdt)
 	world.update_view(dt, _clock, camera)
 	_update_camera(dt)
-	overlay.update_view((time_pos - start_pos) / maxf(duration - start_pos, 0.01), puppets[focus], CAM_NAMES[cam_mode] if cam_mode != "auto" else "%s · %s" % [CAM_NAMES["auto"], CAM_NAMES[_auto_cam]], SPEEDS[speed_idx], paused)
+	overlay.update_view((time_pos - start_pos) / maxf(duration - start_pos, 0.01), puppets[focus], Loc.t(CAM_NAMES[cam_mode]) if cam_mode != "auto" else "%s · %s" % [Loc.t(CAM_NAMES["auto"]), Loc.t(CAM_NAMES[_auto_cam])], SPEEDS[speed_idx], paused)
 
 
 func _dispatch_events(from: float, to: float) -> void:

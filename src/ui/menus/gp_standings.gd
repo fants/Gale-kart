@@ -35,7 +35,7 @@ func build() -> void:
 	head.add_child(hr)
 	hr.add_child(Widgets.Icon.new("cup_" + str(gp.get("cup_id", "star")), 110.0, UiTheme.SUN))
 	hr.add_child(Widgets.title(str(gp.get("cup_name", "大奖赛")), 96, UiTheme.SUN, false, 16))
-	var sub := Widgets.label("第 %d / %d 场结束 · 积分榜" % [done, tracks.size()], 32)
+	var sub := Widgets.label(Loc.t("第 %d / %d 场结束 · 积分榜") % [done, tracks.size()], 32)
 	sub.add_theme_color_override("font_outline_color", UiTheme.CLOUD)
 	sub.add_theme_constant_override("outline_size", 10)
 	head.add_child(sub)
@@ -44,15 +44,15 @@ func build() -> void:
 	head.add_child(prog)
 	var results: Array = gp.get("results", [])
 	for i in tracks.size():
-		var tname := str(TracksData.track_by_id(str(tracks[i]))["name"])
+		var tname := Loc.name_of(TracksData.track_by_id(str(tracks[i])))
 		var txt := tname
 		var col := UiTheme.WHITE
 		if i < results.size():
 			var rr: Dictionary = results[i]
-			txt = "%s  第 %d 名" % [tname, int(rr["rank"])]
+			txt = Loc.t("%s  第 %d 名") % [tname, int(rr["rank"])]
 			col = UiTheme.MINT
 		elif i == done:
-			txt = "下一场：" + tname
+			txt = Loc.t("下一场：") + tname
 			col = UiTheme.SUN
 		prog.add_child(Widgets.badge(txt, col, 22))
 
@@ -110,7 +110,7 @@ func build() -> void:
 		_first = award
 	else:
 		var next_id := str(tracks[done]) if done < tracks.size() else ""
-		var nx := Widgets.button("下一场：%s" % TracksData.track_by_id(next_id)["name"], "primary", "next", UiTheme.WHITE)
+		var nx := Widgets.button(Loc.t("下一场：%s") % Loc.name_of(TracksData.track_by_id(next_id)), "primary", "next", UiTheme.WHITE)
 		nx.click_sound = "ui_confirm"
 		nx.pressed.connect(func() -> void: Game.gp_next())
 		btns.add_child(nx)
@@ -143,12 +143,12 @@ func _row(r: Dictionary, rank: int, pts: int) -> Dictionary:
 	var av := PortraitBaker.Avatar.new(cid, 54.0)
 	av.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(av)
-	var nm := Widgets.label(("%s（你）" % r["name"]) if is_p else str(r["name"]), 30)
+	var nm := Widgets.label((Loc.t("%s（你）") % Loc.t(str(r["name"]))) if is_p else Loc.t(str(r["name"])), 30)
 	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nm.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(nm)
 	var kd := KartsData.kart_by_id(str(r["kart_id"]))
-	var kl := Widgets.label(str(kd["name"]), 22, UiTheme.INK_2)
+	var kl := Widgets.label(Loc.name_of(kd), 22, UiTheme.INK_2)
 	kl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(kl)
 	var gain: int = r["gain"]

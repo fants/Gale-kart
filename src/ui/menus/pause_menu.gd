@@ -68,12 +68,12 @@ func setup(p_ctl: RaceController, p_gp: Dictionary) -> void:
 	info.add_child(Widgets.badge(ctl.track.name, UiTheme.SUN, 24))
 	info.add_child(Widgets.badge(mode_name, UiTheme.BUBBLE, 24))
 	var lap := clampi(race.player.lap, 1, race.laps)
-	info.add_child(Widgets.badge("第 %d / %d 圈" % [lap, race.laps], UiTheme.WHITE, 24))
+	info.add_child(Widgets.badge(Loc.t("第 %d / %d 圈") % [lap, race.laps], UiTheme.WHITE, 24))
 	if race.karts.size() > 1:
-		info.add_child(Widgets.badge("第 %d 名" % race.player.rank, UiTheme.MINT, 24))
+		info.add_child(Widgets.badge(Loc.t("第 %d 名") % race.player.rank, UiTheme.MINT, 24))
 	if not gp.is_empty():
 		var tracks: Array = gp["tracks"]
-		var gl := Widgets.label("%s · 第 %d / %d 场" % [gp["cup_name"], int(gp["index"]) + 1, tracks.size()], 24, UiTheme.INK_2)
+		var gl := Widgets.label(Loc.t("%s · 第 %d / %d 场") % [Loc.t(str(gp["cup_name"])), int(gp["index"]) + 1, tracks.size()], 24, UiTheme.INK_2)
 		gl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(gl)
 	var gap := Control.new()

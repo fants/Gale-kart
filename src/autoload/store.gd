@@ -15,6 +15,8 @@ const DEFAULT_SETTINGS := {
 	"auto_instant": false,
 	"show_fps": false,
 	"muted": false,
+	## auto：跟随系统语言（简体中文 → 中文，其余 → 英文）
+	"language": "auto",
 }
 
 const DEFAULT_SELECTION := {

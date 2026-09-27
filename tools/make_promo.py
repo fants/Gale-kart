@@ -67,7 +67,10 @@ def round_avatar(src: Image.Image, size: int) -> Image.Image:
     return out.resize((size, size), Image.LANCZOS)
 
 
-def board(bg: Image.Image, name: str, text_center_x: float, avatar: Image.Image) -> Image.Image:
+SUBTITLES = {"": "关注我 · 看更多赛车视频！", "_en": "Follow me for more racing videos!"}
+
+
+def board(bg: Image.Image, name: str, text_center_x: float, avatar: Image.Image, subtitle: str) -> Image.Image:
     """2:1 广告牌：插画 + 右 / 左侧的文字区"""
     W, H = 2048, 1024
     im = cover(bg.convert("RGB"), W, H).convert("RGBA")
@@ -91,8 +94,11 @@ def board(bg: Image.Image, name: str, text_center_x: float, avatar: Image.Image)
     f_cn = ImageFont.truetype(FONT_CN, 250 if len(name) <= 4 else int(1000 / len(name)))
     text(d, (cx, 560), "@" + name, f_cn, WHITE, INK, 16, "mm", shadow=(*PINK, 255))
     # 副标题
-    f_sub = ImageFont.truetype(FONT_CN, 96)
-    text(d, (cx, 800), "关注我 · 看更多赛车视频！", f_sub, (255, 236, 120), INK, 10, "mm")
+    size = 96
+    while size > 40 and d.textlength(subtitle, font=ImageFont.truetype(FONT_CN, size)) > W * 0.6:
+        size -= 4
+    f_sub = ImageFont.truetype(FONT_CN, size)
+    text(d, (cx, 800), subtitle, f_sub, (255, 236, 120), INK, 10, "mm")
     return Image.alpha_composite(im, layer).convert("RGB")
 
 
@@ -137,11 +143,14 @@ def main() -> None:
     mascot = key_green(Image.open(src / "mascot.png"))
     fit_square(mascot, 256).save(out_ui / "mascot.png")
     ads = ROOT / "assets/textures/ads"
-    board(Image.open(src / "board_2.png"), name, 0.36, avatar).resize((1024, 512), Image.LANCZOS).save(ads / "ad_creator.jpg", quality=90)
-    board(Image.open(src / "board_1.png"), name, 0.64, avatar).resize((1024, 512), Image.LANCZOS).save(ads / "ad_creator_2.jpg", quality=90)
+    # 中文版与英文版（副标题不同）
+    for suffix, sub in SUBTITLES.items():
+        board(Image.open(src / "board_2.png"), name, 0.36, avatar, sub).resize((1024, 512), Image.LANCZOS).save(ads / f"ad_creator{suffix}.jpg", quality=90)
+        board(Image.open(src / "board_1.png"), name, 0.64, avatar, sub).resize((1024, 512), Image.LANCZOS).save(ads / f"ad_creator_2{suffix}.jpg", quality=90)
     banner(avatar, name).resize((1024, 342), Image.LANCZOS).save(ads / "banner_creator.jpg", quality=90)
     print("作者：bilibili @" + name)
-    for p in ["assets/ui/creator/avatar.png", "assets/ui/creator/mascot.png", "assets/textures/ads/ad_creator.jpg", "assets/textures/ads/ad_creator_2.jpg", "assets/textures/ads/banner_creator.jpg"]:
+    for p in ["assets/ui/creator/avatar.png", "assets/ui/creator/mascot.png", "assets/textures/ads/ad_creator.jpg", "assets/textures/ads/ad_creator_2.jpg",
+              "assets/textures/ads/ad_creator_en.jpg", "assets/textures/ads/ad_creator_2_en.jpg", "assets/textures/ads/banner_creator.jpg"]:
         print(" ", p)
 
 

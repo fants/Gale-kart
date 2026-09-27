@@ -373,7 +373,7 @@ func update_view(dt: float, p_race: RaceSim) -> void:
 			_pending_rank = 0
 		elif _rank_hold <= 0.0:
 			if _pending_rank < _best_announced or _pending_rank <= 3:
-				sub("超越！第 %d 名" % _pending_rank, MINT)
+				sub(Loc.t("超越！第 %d 名") % _pending_rank, MINT)
 			_best_announced = mini(_best_announced, _pending_rank)
 			_pending_rank = 0
 	_rank_total.text = "/%d" % n
@@ -394,7 +394,7 @@ func update_view(dt: float, p_race: RaceSim) -> void:
 		var row: Dictionary = _rank_rows[i]
 		if k == null:
 			continue
-		(row["name"] as Label).text = k.name
+		(row["name"] as Label).text = Loc.t(k.name)
 		(row["chip"] as ColorRect).color = Color(k.character.get("color", "#FFFFFF"))
 		var sb: StyleBoxFlat = row["style"]
 		sb.bg_color = Color(YELLOW, 0.95) if k.is_player else Color(INK, 0.6)

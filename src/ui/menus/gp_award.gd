@@ -27,17 +27,17 @@ func build() -> void:
 	head.add_theme_constant_override("separation", 6)
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(head)
-	var cup_l := Widgets.label("%s · %s规则" % [gp.get("cup_name", "大奖赛"), "道具" if str(gp.get("rule", "speed")) == "item" else "竞速"], 34)
+	var cup_l := Widgets.label(Loc.t("%s · %s规则") % [Loc.t(str(gp.get("cup_name", "大奖赛"))), Loc.t("道具" if str(gp.get("rule", "speed")) == "item" else "竞速")], 34)
 	cup_l.add_theme_color_override("font_outline_color", UiTheme.CLOUD)
 	cup_l.add_theme_constant_override("outline_size", 10)
 	head.add_child(cup_l)
-	var t := Widgets.title("总成绩 " + (TITLES[rank - 1] if rank <= 3 else "第 %d 名" % rank), 96,
+	var t := Widgets.title(Loc.t("总成绩 ") + Loc.t(TITLES[rank - 1] if rank <= 3 else Loc.t("第 %d 名") % rank), 96,
 		UiTheme.SUN if rank <= 3 else UiTheme.CLOUD, false, 16)
 	head.add_child(t)
 	var badges := HBoxContainer.new()
 	badges.add_theme_constant_override("separation", 12)
 	head.add_child(badges)
-	badges.add_child(Widgets.badge("总积分 %d 分" % pts, UiTheme.WHITE, 28))
+	badges.add_child(Widgets.badge(Loc.t("总积分 %d 分") % pts, UiTheme.WHITE, 28))
 	if _final.get("improved", false):
 		badges.add_child(Widgets.badge("新纪录：最好名次", UiTheme.SUN, 28))
 
@@ -71,13 +71,13 @@ func build() -> void:
 	top.add_child(tv)
 	var cup_names: Array[String] = ["金杯", "银杯", "铜杯"]
 	tv.add_child(Widgets.title(cup_names[rank - 1] if rank <= 3 else "再接再厉！", 64, UiTheme.rank_color(rank) if rank <= 3 else UiTheme.BUBBLE, false, 12))
-	var msg := "恭喜夺得%s！" % gp.get("cup_name", "") if rank == 1 else ("登上领奖台，下次冲击冠军！" if rank <= 3 else "前三名才能拿到奖杯，再来一次吧。")
+	var msg := Loc.t("恭喜夺得%s！") % Loc.t(str(gp.get("cup_name", ""))) if rank == 1 else ("登上领奖台，下次冲击冠军！" if rank <= 3 else "前三名才能拿到奖杯，再来一次吧。")
 	var ml := Widgets.label(msg, 26, UiTheme.INK_2)
 	ml.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tv.add_child(ml)
 	var rec: Dictionary = Store.gp_records.get(str(gp.get("cup_id", "")), {})
 	if not rec.is_empty():
-		tv.add_child(Widgets.label("本杯最好：第 %d 名 · %d 分 · 夺冠 %d 次" % [int(rec["best_rank"]), int(rec["best_points"]), int(rec["wins"])], 22, UiTheme.INK_2))
+		tv.add_child(Widgets.label(Loc.t("本杯最好：第 %d 名 · %d 分 · 夺冠 %d 次") % [int(rec["best_rank"]), int(rec["best_points"]), int(rec["wins"])], 22, UiTheme.INK_2))
 
 	var list := VBoxContainer.new()
 	list.add_theme_constant_override("separation", 5)
@@ -125,11 +125,11 @@ func _row(r: Dictionary, rank: int) -> Control:
 	var av := PortraitBaker.Avatar.new(str(r["character_id"]), 42.0)
 	av.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(av)
-	var nm := Widgets.label(("%s（你）" % r["name"]) if is_p else str(r["name"]), 26)
+	var nm := Widgets.label((Loc.t("%s（你）") % Loc.t(str(r["name"]))) if is_p else Loc.t(str(r["name"])), 26)
 	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nm.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(nm)
-	var pl := Widgets.label("%d 分" % int(r["points"]), 26, UiTheme.INK, true)
+	var pl := Widgets.label(Loc.t("%d 分") % int(r["points"]), 26, UiTheme.INK, true)
 	pl.add_theme_font_override("font", UiTheme.font_cn())
 	pl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(pl)

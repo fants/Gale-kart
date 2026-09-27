@@ -212,7 +212,9 @@ func _build_race_tab() -> Control:
 			row.add_child(_option_block("难度", _difficulty_seg()))
 			row.add_child(_option_block("圈数", _laps_seg()))
 		_:
-			row.add_child(_option_block("模式", Widgets.segmented([["speed", "竞速赛"], ["item", "道具赛"]], str(sel["mode"]),
+			# 英文按钮更宽：用短名字，免得把赛道列表挤出面板
+			var short := Loc.is_en()
+			row.add_child(_option_block("模式", Widgets.segmented([["speed", "竞速" if short else "竞速赛"], ["item", "道具" if short else "道具赛"]], str(sel["mode"]),
 				func(v2: Variant) -> void: _pick("mode", str(v2)), 140.0)))
 			row.add_child(_option_block("难度", _difficulty_seg()))
 			row.add_child(_option_block("圈数", _laps_seg()))
@@ -288,15 +290,17 @@ func _track_card(t: Dictionary) -> Widgets.PopButton:
 	v.add_child(thumb)
 	var r1 := HBoxContainer.new()
 	v.add_child(r1)
-	var nm := Widgets.label(str(t["name"]), 26)
+	var nm := Widgets.label(str(t["name"]), 22 if Loc.is_en() else 26)
 	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	r1.add_child(nm)
 	var stars := Widgets.star_rating(int(t["difficulty"]), 3, 18.0)
 	stars.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	r1.add_child(stars)
 	var r2 := HBoxContainer.new()
 	v.add_child(r2)
-	var en := Widgets.label(str(t["en"]), 15, UiTheme.INK_2, true)
+	# 英文界面下名字本身就是英文，副标题留空
+	var en := Widgets.label("" if Loc.is_en() else str(t["en"]), 15, UiTheme.INK_2, true)
 	en.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	en.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	r2.add_child(en)
@@ -318,14 +322,15 @@ func _cup_card(cup: Dictionary) -> Widgets.PopButton:
 	head.add_theme_constant_override("separation", 12)
 	v.add_child(head)
 	head.add_child(Widgets.Icon.new("cup_" + id, 72.0, UiTheme.SUN if id == "star" else UiTheme.BUBBLE))
-	var nm := Widgets.label(str(cup["name"]), 40)
+	var nm := Widgets.label(str(cup["name"]), 30 if Loc.is_en() else 40)
 	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	nm.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(nm)
 	var rec: Dictionary = Store.gp_records.get(id, {})
 	var best_text := "尚未参赛"
 	if not rec.is_empty():
-		best_text = "最好第 %d 名 · %d 分" % [int(rec["best_rank"]), int(rec["best_points"])]
+		best_text = Loc.t("最好第 %d 名 · %d 分") % [int(rec["best_rank"]), int(rec["best_points"])]
 	var bb := Widgets.badge(best_text, UiTheme.SUN_LIGHT if rec.is_empty() else UiTheme.SUN, 20)
 	bb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(bb)
@@ -347,7 +352,8 @@ func _cup_card(cup: Dictionary) -> Widgets.PopButton:
 		th.line_w = 5.0
 		th.pad = 10.0
 		tv.add_child(th)
-		var tl := Widgets.label("%d. %s" % [i + 1, t["name"]], 20)
+		var tl := Widgets.label("%d. %s" % [i + 1, Loc.name_of(t)], 16 if Loc.is_en() else 20)
+		tl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tv.add_child(tl)
 	var foot := HBoxContainer.new()
@@ -355,7 +361,9 @@ func _cup_card(cup: Dictionary) -> Widgets.PopButton:
 	v.add_child(foot)
 	for col: Color in [UiTheme.GOLD, UiTheme.SILVER, UiTheme.BRONZE]:
 		foot.add_child(Widgets.Icon.new("trophy", 38.0, col))
-	var fl := Widgets.label("%d 场总分前三名登上领奖台" % ids.size(), 22, UiTheme.INK_2)
+	var fl := Widgets.label(Loc.t("%d 场总分前三名登上领奖台") % ids.size(), 22, UiTheme.INK_2)
+	fl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	fl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	fl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	foot.add_child(fl)
 	var c := Widgets.card(v, Vector2(500, 380))
@@ -414,7 +422,7 @@ func _build_garage_tab() -> Control:
 		var nl := Widgets.label(str(kd["name"]), 32)
 		nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		kv.add_child(nl)
-		var el := Widgets.label(str(kd["en"]), 14, UiTheme.INK_2, true)
+		var el := Widgets.label("" if Loc.is_en() else str(kd["en"]), 14, UiTheme.INK_2, true)
 		el.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		kv.add_child(el)
 		var tag := Widgets.badge(kart_tag(kd), UiTheme.MINT, 18)
@@ -468,7 +476,7 @@ static func kart_tag(kd: Dictionary) -> String:
 		if v > best_v:
 			best_v = v
 			best_l = str(pair[1])
-	return "均衡型" if all_same else "%s型" % best_l
+	return Loc.t("均衡型") if all_same else Loc.t("%s型") % Loc.t(best_l)
 
 
 # ———————————————————————— 右栏 ————————————————————————
@@ -519,7 +527,7 @@ func _build_info_card() -> Control:
 	sv.add_theme_constant_override("separation", -2)
 	sv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	srow.add_child(sv)
-	_summary = Widgets.label("", 28)
+	_summary = Widgets.label("", 28 if not Loc.is_en() else 24)
 	_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	sv.add_child(_summary)
 	_summary_sub = Widgets.label("", 22, UiTheme.INK_2)
@@ -563,7 +571,7 @@ func _refresh() -> void:
 			best.text = MathX.format_time(float(r["best_total"]))
 			best.add_theme_color_override("font_color", UiTheme.INK)
 		elif r.get("best_lap") != null:
-			best.text = "圈 " + MathX.format_time(float(r["best_lap"]))
+			best.text = Loc.t("圈 ") + MathX.format_time(float(r["best_lap"]))
 			best.add_theme_color_override("font_color", UiTheme.INK)
 		else:
 			best.text = "—"
@@ -585,21 +593,21 @@ func _refresh() -> void:
 	var ch := KartsData.character_by_id(cid)
 	var kd := KartsData.kart_by_id(kid)
 	var pt := KartsData.paint_by_id(pid)
-	_char_name.text = "%s · %s涂装" % [ch["name"], pt["name"]]
+	_char_name.text = Loc.t("%s · %s涂装") % [Loc.name_of(ch), Loc.name_of(pt)]
 	if kind == "gp":
 		var cup := TracksData.cup_by_id(cup_id)
 		var names: Array[String] = []
 		for t: Variant in cup["tracks"]:
-			names.append(str(TracksData.track_by_id(str(t))["name"]))
+			names.append(Loc.name_of(TracksData.track_by_id(str(t))))
 		_track_note.text = " → ".join(names)
 	else:
 		_track_note.text = str(TracksData.track_by_id(tid)["blurb"])
 	if _ghost_badge:
 		var g := Store.ghost(tid)
-		_ghost_badge.text = "最佳 %s" % MathX.format_time(float(g["total"])) if not g.is_empty() else "暂无幽灵车"
+		_ghost_badge.text = Loc.t("最佳 %s") % MathX.format_time(float(g["total"])) if not g.is_empty() else "暂无幽灵车"
 
 	_kart_title.text = str(kd["name"])
-	_kart_en.text = str(kd["en"])
+	_kart_en.text = "" if Loc.is_en() else str(kd["en"])
 	_kart_tag.text = kart_tag(kd)
 	_kart_blurb.text = str(kd["blurb"])
 	var stats: Dictionary = kd["stats"]
@@ -610,12 +618,12 @@ func _refresh() -> void:
 	var diff: Dictionary = KartsData.DIFFICULTIES.get(str(sel.get("difficulty", "normal")), KartsData.DIFFICULTIES["normal"])
 	match kind:
 		"time":
-			_summary.text = "计时赛 · %s · 3 圈" % TracksData.track_by_id(tid)["name"]
+			_summary.text = Loc.t("计时赛 · %s · 3 圈") % Loc.name_of(TracksData.track_by_id(tid))
 		"gp":
-			_summary.text = "%s · %s规则 · %s · %d 圈" % [TracksData.cup_by_id(cup_id)["name"], "道具" if mode == "item" else "竞速", diff["name"], int(sel.get("laps", 3))]
+			_summary.text = Loc.t("%s · %s规则 · %s · %d 圈") % [Loc.name_of(TracksData.cup_by_id(cup_id)), Loc.t("道具" if mode == "item" else "竞速"), Loc.name_of(diff), int(sel.get("laps", 3))]
 		_:
-			_summary.text = "%s · %s · %s · %d 圈" % [MODE_NAMES.get(mode, "竞速赛"), TracksData.track_by_id(tid)["name"], diff["name"], int(sel.get("laps", 3))]
-	_summary_sub.text = "%s 驾驶 %s（%s涂装）" % [ch["name"], kd["name"], pt["name"]]
+			_summary.text = Loc.t("%s · %s · %s · %d 圈") % [Loc.t(MODE_NAMES.get(mode, "竞速赛")), Loc.name_of(TracksData.track_by_id(tid)), Loc.name_of(diff), int(sel.get("laps", 3))]
+	_summary_sub.text = Loc.t("%s 驾驶 %s（%s涂装）") % [Loc.name_of(ch), Loc.name_of(kd), Loc.name_of(pt)]
 
 
 func _race_sel() -> Dictionary:
