@@ -23,7 +23,7 @@
 - 模型只用 Kenney CC0 包；字体只用 OFL（ZCOOL KuaiLe、Bungee）；音频全部由 `tools/gen_audio.py` 生成。
 - 糖果色：墨蓝 #1B1F3B、阳光黄 #FFC93C、泡泡蓝 #3EC6FF、赛车红 #FF4D5E、薄荷绿 #45E3A6、云白 #F7FAFF。
 - 项目根目录 `~/Workspaces/godot/kart-racer`；测试命令 `godot --headless --path . -s tests/run_tests.gd`（退出码 = 失败数）。
-- 素材源（已下载）：`/private/tmp/claude-502/-Users-fants-Workspaces-godot-godot-test/a693acae-4408-47ee-a8a4-5c949e84eb02/scratchpad/kenney/`。
+- 素材源：Kenney 官网下载的 Car Kit / Mini Characters / Racing Kit / Nature Kit / City Kit（https://kenney.nl/assets）。
 
 ## Review Focus
 
