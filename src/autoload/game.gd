@@ -55,12 +55,17 @@ func _apply_language() -> void:
 	Loc.apply(str(args.get("lang", Store.settings.get("language", "auto"))))
 
 
+const MIN_WINDOW := Vector2i(1280, 720)
+
+
 func _apply_display_settings() -> void:
 	var s := Store.settings
 	AudioMgr.set_volumes(s.get("music", 0.55), s.get("sfx", 0.85))
 	AudioMgr.set_muted(s.get("muted", false))
 	if DisplayServer.get_name() == "headless":
 		return
+	# 窗口最小尺寸：再小的话界面（按 1920×1080 布局等比缩放）的文字就看不清了
+	get_window().min_size = MIN_WINDOW
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if s.get("vsync", true) else DisplayServer.VSYNC_DISABLED)
 	if args.has("size"):
 		var wh: PackedStringArray = str(args["size"]).split("x")
