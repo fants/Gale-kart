@@ -144,7 +144,7 @@ func _build() -> void:
 	_status = Widgets.title(Loc.t("首次启动，正在准备 3D 图形…"), 46, UiTheme.SUN, false, 10)
 	_status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_status)
-	var note := Widgets.label(Loc.t("只有第一次需要，大约 30～60 秒，之后启动就很快了。请稍候，不要关闭窗口。"), 26, UiTheme.INK_2)
+	var note := Widgets.label(Loc.t("只有第一次需要，可能要 1～2 分钟，之后启动就很快了。请稍候，不要关闭窗口。"), 26, UiTheme.INK_2)
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	cv.add_child(note)

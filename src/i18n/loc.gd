@@ -317,7 +317,7 @@ const EN := {
 	"追踪第一名，命中后把它困在水泡里。": "Chases the leader and traps them in a bubble.",
 	# —— 首次启动 ——
 	"首次启动，正在准备 3D 图形…": "First launch: preparing 3D graphics…",
-	"只有第一次需要，大约 30～60 秒，之后启动就很快了。请稍候，不要关闭窗口。": "This only happens once and takes about 30–60 seconds. Later launches are fast — please don't close the window.",
+	"只有第一次需要，可能要 1～2 分钟，之后启动就很快了。请稍候，不要关闭窗口。": "This only happens once and may take 1–2 minutes. Later launches are fast — please don't close the window.",
 	"已等待 %d 秒": "Waiting %d s",
 	"准备完成，马上开始！": "Ready — starting now!",
 	"3D 图形启动失败，请更新显卡驱动后重试。": "3D graphics failed to start. Please update your graphics driver and try again.",

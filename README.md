@@ -26,7 +26,7 @@
 
 - **Download (no Godot needed):** get the macOS build (universal: Intel and Apple Silicon) or the Windows build from the GitHub **Releases** page. You can also export your own build; see [Development](#development).
 - **Run from source:** install Godot 4.7 (`brew install --cask godot`), then run `godot --path .` in a terminal (on macOS you can also double-click `start-macos.command`), or open the project in the Godot editor and press F5.
-- **First launch:** on first launch, each computer compiles its 3D shaders (about 40 seconds on an Intel Mac). A "Preparing 3D graphics" screen is shown during this step, and later launches are fast.
+- **First launch:** on first launch, each computer compiles its 3D shaders (up to 1–2 minutes, longest on Intel Macs). A "Preparing 3D graphics" screen is shown during this step, and later launches are fast.
 - **Language:** the game is in Chinese and English. Simplified Chinese systems start in Chinese and all others start in English. You can change it any time in Settings.
 
 ## Features
