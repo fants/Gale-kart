@@ -37,6 +37,8 @@ var _flow_t := 0.0
 ## 拖拽流程用：模拟鼠标位置、拖动开始时的转台角度
 var _flow_mouse := Vector2.ZERO
 var _flow_yaw0 := 0.0
+## 首次启动提示模式（兼容渲染器，只显示「正在准备 3D 图形」）
+var launcher := false
 
 
 func _ready() -> void:
@@ -48,6 +50,12 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_apply_language()
 	_apply_display_settings()
+	# 项目默认用兼容渲染器秒开：这时只显示「正在准备 3D 图形」，由它以 Forward+ 启动游戏本体（见 FirstLaunch）
+	if DisplayServer.get_name() != "headless":
+		if RenderingServer.get_current_rendering_method() == "gl_compatibility" and not args.has("compat"):
+			launcher = true
+		else:
+			_mark_graphics_ready()
 
 
 ## 语言：设置里的 language，调试时可用 --lang=zh / en 覆盖
@@ -74,8 +82,23 @@ func _apply_display_settings() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 
+## Forward+ 已经初始化完（着色器编译好了）：记下来，之后直接用 Forward+ 启动；窗口提到最前
+func _mark_graphics_ready() -> void:
+	if RenderingServer.get_current_rendering_method() != "forward_plus":
+		return
+	if args.has("startup-time"):
+		print("[启动] Forward+ 就绪于引擎启动后 %d ms" % Time.get_ticks_msec())
+	var cf := ConfigFile.new()
+	cf.set_value("rendering", "renderer/rendering_method", "forward_plus")
+	cf.save(FirstLaunch.GRAPHICS_CFG)
+	DisplayServer.window_move_to_foreground()
+
+
 func boot(main_node: Node) -> void:
 	main = main_node
+	if launcher:
+		main.add_child(FirstLaunch.new())
+		return
 	curtain = Curtain.new()
 	main.add_child(curtain)
 	if args.has("shots"):

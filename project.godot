@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 boot_splash/bg_color=Color(0.105882, 0.121569, 0.231373, 1)
 boot_splash/show_image=false
 config/icon="res://assets/icon.png"
+config/project_settings_override="user://graphics.cfg"
 
 [autoload]
 
@@ -39,6 +40,7 @@ theme/custom_font="res://assets/fonts/ZCOOLKuaiLe-Regular.ttf"
 
 [rendering]
 
+renderer/rendering_method="gl_compatibility"
 textures/canvas_textures/default_texture_filter=3
 
 textures/vram_compression/import_etc2_astc=true
