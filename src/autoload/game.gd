@@ -460,6 +460,23 @@ func _save_shot(file: String) -> void:
 
 
 ## 演示页面：用假数据展示结算、积分榜、颁奖，或在比赛中打开暂停菜单
+## 调试：--menu=setup --dump-ui 打印页面里最小宽度超过 700 的控件（查排版溢出）
+func _dump_ui() -> void:
+	await get_tree().create_timer(2.0).timeout
+	var page := menu.current()
+	var out: Array[String] = []
+	var walk := func(n: Node, depth: int, f: Callable) -> void:
+		if n is Control and depth < 9:
+			var c := n as Control
+			var mw := c.get_combined_minimum_size().x
+			if mw > 700.0:
+				out.append("%s%s [%s] min=%.0f size=%.0f" % ["  ".repeat(depth), c.name, c.get_class(), mw, c.size.x])
+		for ch in n.get_children():
+			f.call(ch, depth + 1, f)
+	walk.call(page, 0, walk)
+	print("[UI]\n" + "\n".join(out))
+
+
 func _boot_demo(which: String) -> void:
 	match which:
 		"results-demo":
@@ -500,6 +517,8 @@ func _boot_demo(which: String) -> void:
 			loading.setup(sel2, {})
 		"setup":
 			goto_menu("setup", {"kind": str(args.get("kind", "quick")), "tab": int(args.get("tab", "0"))})
+			if args.has("dump-ui"):
+				_dump_ui()
 		"help":
 			goto_menu("help", {"tab": int(args.get("tab", "0"))})
 		_:

@@ -195,7 +195,7 @@ func _build_race_tab() -> Control:
 	v.add_theme_constant_override("separation", 14)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 44)
+	row.add_theme_constant_override("separation", 32 if Loc.is_en() else 44)
 	v.add_child(row)
 	match kind:
 		"time":
@@ -215,7 +215,7 @@ func _build_race_tab() -> Control:
 			# 英文按钮更宽：用短名字，免得把赛道列表挤出面板
 			var short := Loc.is_en()
 			row.add_child(_option_block("模式", Widgets.segmented([["speed", "竞速" if short else "竞速赛"], ["item", "道具" if short else "道具赛"]], str(sel["mode"]),
-				func(v2: Variant) -> void: _pick("mode", str(v2)), 140.0)))
+				func(v2: Variant) -> void: _pick("mode", str(v2)), 110.0 if short else 140.0)))
 			row.add_child(_option_block("难度", _difficulty_seg()))
 			row.add_child(_option_block("圈数", _laps_seg()))
 	_mode_note = Widgets.note("", 22)
@@ -272,8 +272,9 @@ func _difficulty_seg() -> Control:
 
 
 func _laps_seg() -> Control:
+	# 英文只显示数字，按钮可以窄一些
 	return Widgets.segmented([[1, "1 圈"], [3, "3 圈"], [5, "5 圈"]], int(sel.get("laps", 3)),
-		func(v: Variant) -> void: _pick("laps", int(v)), 96.0)
+		func(v: Variant) -> void: _pick("laps", int(v)), 64.0 if Loc.is_en() else 96.0)
 
 
 func _track_card(t: Dictionary) -> Widgets.PopButton:
